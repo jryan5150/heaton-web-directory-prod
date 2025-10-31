@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { getSessionFromCookie, isSuperAdmin } from '@/lib/auth-helpers'
 import fs from 'fs'
 import path from 'path'
 import { User } from '@/types/admin'
@@ -20,13 +20,13 @@ function writeUsers(users: User[]) {
 // GET - Get all users (superadmin only)
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth()
+    const user = await getSessionFromCookie()
 
-    if (!session?.user) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (session.user.role !== 'superadmin') {
+    if (!isSuperAdmin(user)) {
       return NextResponse.json({ error: 'Forbidden - Superadmin only' }, { status: 403 })
     }
 
@@ -41,13 +41,13 @@ export async function GET(request: NextRequest) {
 // POST - Add new user (superadmin only)
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth()
+    const user = await getSessionFromCookie()
 
-    if (!session?.user) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (session.user.role !== 'superadmin') {
+    if (!isSuperAdmin(user)) {
       return NextResponse.json({ error: 'Forbidden - Superadmin only' }, { status: 403 })
     }
 
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
       name,
       role,
       addedAt: new Date().toISOString(),
-      addedBy: session.user.email || 'unknown'
+      addedBy: user.email || 'unknown'
     }
 
     users.push(newUser)
@@ -90,13 +90,13 @@ export async function POST(request: NextRequest) {
 // DELETE - Remove user (superadmin only)
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await auth()
+    const user = await getSessionFromCookie()
 
-    if (!session?.user) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (session.user.role !== 'superadmin') {
+    if (!isSuperAdmin(user)) {
       return NextResponse.json({ error: 'Forbidden - Superadmin only' }, { status: 403 })
     }
 
@@ -114,7 +114,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Prevent deleting yourself
-    if (userToDelete.email === session.user.email) {
+    if (userToDelete.email === user.email) {
       return NextResponse.json({ error: 'Cannot delete your own account' }, { status: 400 })
     }
 

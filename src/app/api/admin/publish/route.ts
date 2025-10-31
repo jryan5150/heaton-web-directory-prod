@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
+import { getSessionFromCookie, canPublish } from '@/lib/auth-helpers'
 import fs from 'fs'
 import path from 'path'
 import { Employee } from '@/types/employee'
@@ -64,17 +64,17 @@ function logActivity(entry: ActivityLogEntry) {
 export async function POST(request: NextRequest) {
   try {
     // Check authentication and authorization
-    const session = await auth()
+    const user = await getSessionFromCookie()
 
-    if (!session?.user) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (session.user.role !== 'superadmin') {
+    if (!canPublish(user)) {
       return NextResponse.json({ error: 'Forbidden - Super Admin only' }, { status: 403 })
     }
 
-    const { author = session.user.name || 'Admin' } = await request.json()
+    const { author = user.name || 'Admin' } = await request.json()
 
     // Get approved changes
     const allChanges = readPendingChanges()
