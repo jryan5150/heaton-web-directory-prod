@@ -1,0 +1,18 @@
+[
+  {
+    "id": "activity-1761844383228",
+    "action": "rollback",
+    "details": "Rolled back to version v-1761844335796 (265 employees)",
+    "author": "Admin",
+    "timestamp": "2025-10-30T17:13:03.229Z",
+    "type": "rollback"
+  },
+  {
+    "id": "activity-1761844335801",
+    "action": "publish",
+    "details": "Published 1 changes (v-1761844335796)",
+    "author": "Admin",
+    "timestamp": "2025-10-30T17:12:15.801Z",
+    "type": "publish"
+  }
+]

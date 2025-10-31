@@ -1,28 +1,26 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { getSessionFromRequest } from './lib/auth-helpers'
 
-// Simple password protection
-const DIRECTORY_PASSWORD = process.env.DIRECTORY_PASSWORD || 'heaton2024'
-
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Protect heaton-directory and apple-demo routes
-  if (pathname.startsWith('/heaton-directory') || pathname.startsWith('/apple-demo')) {
-    // Check if user is authenticated
-    const authCookie = request.cookies.get('directory-auth')
+  // Protect /admin routes (except /admin/login)
+  if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
+    const user = await getSessionFromRequest(request)
 
-    if (authCookie?.value !== 'authenticated') {
-      // Redirect to login page
-      const loginUrl = new URL('/login', request.url)
-      loginUrl.searchParams.set('from', pathname)
+    if (!user) {
+      // Not authenticated - redirect to login
+      const loginUrl = new URL('/admin/login', request.url)
       return NextResponse.redirect(loginUrl)
     }
   }
+
+  // Remove password protection from main directory
+  // (Public access to /)
 
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/heaton-directory/:path*', '/apple-demo/:path*']
+  matcher: ['/admin/:path*']
 }

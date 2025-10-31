@@ -1,0 +1,29 @@
+[
+  {
+    "id": "user-superadmin",
+    "email": "jryan5150@gmail.com",
+    "name": "Jace Ryan",
+    "role": "superadmin",
+    "passwordHash": "$2b$10$xFd/8xZIIv7PW2I5SLy6tOXqbGSVrs3fqMCXb5kTbUtGDtIR5N4ca",
+    "addedAt": "2025-10-31T00:00:00.000Z",
+    "addedBy": "system"
+  },
+  {
+    "id": "user-approver",
+    "email": "m.balderas@heatoneye.com",
+    "name": "M. Balderas",
+    "role": "approver",
+    "passwordHash": "$2b$10$p0ri4NskJt4B9fJcHkMvgOYfzyDAfA2C03QaXhvHuOdG439OsJIhu",
+    "addedAt": "2025-10-31T00:00:00.000Z",
+    "addedBy": "jryan5150@gmail.com"
+  },
+  {
+    "id": "user-editor",
+    "email": "editor@internal",
+    "name": "Staff Editor",
+    "role": "editor",
+    "passwordHash": "$2b$10$J2hkc7B0l0ZCAuuYFH912OMyO.FZwswj5kC1pOPDizDWUPjL7RNyO",
+    "addedAt": "2025-10-31T00:00:00.000Z",
+    "addedBy": "jryan5150@gmail.com"
+  }
+]
