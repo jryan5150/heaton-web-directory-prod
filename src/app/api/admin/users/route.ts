@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSessionFromCookie, isSuperAdmin } from '@/lib/auth-helpers'
+import { getSessionFromCookie, isSuperAdmin, hashPassword } from '@/lib/auth-helpers'
 import fs from 'fs'
 import path from 'path'
 import { User } from '@/types/admin'
@@ -51,13 +51,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden - Superadmin only' }, { status: 403 })
     }
 
-    const { email, name, role } = await request.json()
+    const { email, name, role, password } = await request.json()
 
-    if (!email || !name || !role) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    if (!email || !name || !role || !password) {
+      return NextResponse.json({ error: 'Missing required fields (email, name, role, password)' }, { status: 400 })
     }
 
-    if (role !== 'superadmin' && role !== 'approver') {
+    if (role !== 'superadmin' && role !== 'approver' && role !== 'editor') {
       return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
     }
 
@@ -68,11 +68,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User already exists' }, { status: 400 })
     }
 
+    // Hash the password
+    const passwordHash = await hashPassword(password)
+
     const newUser: User = {
       id: `user-${Date.now()}`,
       email,
       name,
       role,
+      passwordHash,
       addedAt: new Date().toISOString(),
       addedBy: user.email || 'unknown'
     }
