@@ -12,7 +12,7 @@ export default function UserManagement({ currentUserRole }: UserManagementProps)
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
-  const [newUser, setNewUser] = useState({ email: '', name: '', role: 'approver' as UserRole })
+  const [newUser, setNewUser] = useState({ email: '', name: '', role: 'approver' as UserRole, password: '' })
 
   useEffect(() => {
     loadUsers()
@@ -34,8 +34,8 @@ export default function UserManagement({ currentUserRole }: UserManagementProps)
   }
 
   const handleAddUser = async () => {
-    if (!newUser.email || !newUser.name) {
-      alert('Please fill in all fields')
+    if (!newUser.email || !newUser.name || !newUser.password) {
+      alert('Please fill in all fields including password')
       return
     }
 
@@ -50,7 +50,7 @@ export default function UserManagement({ currentUserRole }: UserManagementProps)
 
       if (response.ok) {
         alert(`Successfully added ${newUser.name}!`)
-        setNewUser({ email: '', name: '', role: 'approver' })
+        setNewUser({ email: '', name: '', role: 'approver', password: '' })
         setShowAddForm(false)
         loadUsers()
       } else {
@@ -105,10 +105,17 @@ export default function UserManagement({ currentUserRole }: UserManagementProps)
   const getRoleBadge = (role: UserRole) => {
     const colors = {
       superadmin: { bg: 'rgba(49, 130, 206, 0.1)', border: 'rgba(49, 130, 206, 0.3)', text: 'var(--accent-color)' },
-      approver: { bg: 'rgba(107, 114, 128, 0.1)', border: 'rgba(107, 114, 128, 0.3)', text: 'var(--secondary-text-color)' }
+      approver: { bg: 'rgba(107, 114, 128, 0.1)', border: 'rgba(107, 114, 128, 0.3)', text: 'var(--secondary-text-color)' },
+      editor: { bg: 'rgba(34, 197, 94, 0.1)', border: 'rgba(34, 197, 94, 0.3)', text: 'rgb(34, 197, 94)' }
     }
 
     const style = colors[role]
+
+    const roleLabels = {
+      superadmin: 'Super Admin',
+      approver: 'Approver',
+      editor: 'Editor'
+    }
 
     return (
       <span style={{
@@ -124,7 +131,7 @@ export default function UserManagement({ currentUserRole }: UserManagementProps)
         gap: '6px'
       }}>
         {getRoleIcon(role)}
-        {role === 'superadmin' ? 'Super Admin' : 'Approver'}
+        {roleLabels[role]}
       </span>
     )
   }
@@ -323,7 +330,7 @@ export default function UserManagement({ currentUserRole }: UserManagementProps)
                   }}
                 />
                 <p style={{ fontSize: '12px', color: 'var(--secondary-text-color)', margin: '6px 0 0 0' }}>
-                  Must match the email used for Microsoft/Google sign-in
+                  Email address for login
                 </p>
               </div>
 
@@ -342,9 +349,32 @@ export default function UserManagement({ currentUserRole }: UserManagementProps)
                     fontSize: '14px'
                   }}
                 >
+                  <option value="editor">Editor - Can submit changes only</option>
                   <option value="approver">Approver - Can approve/reject changes</option>
                   <option value="superadmin">Super Admin - Full access including publish</option>
                 </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '6px' }}>
+                  Password
+                </label>
+                <input
+                  type="password"
+                  value={newUser.password}
+                  onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                  placeholder="Enter initial password"
+                  style={{
+                    width: '100%',
+                    padding: '10px',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '6px',
+                    fontSize: '14px'
+                  }}
+                />
+                <p style={{ fontSize: '12px', color: 'var(--secondary-text-color)', margin: '6px 0 0 0' }}>
+                  User will use this password to log in
+                </p>
               </div>
             </div>
 
@@ -368,7 +398,7 @@ export default function UserManagement({ currentUserRole }: UserManagementProps)
               <button
                 onClick={() => {
                   setShowAddForm(false)
-                  setNewUser({ email: '', name: '', role: 'approver' })
+                  setNewUser({ email: '', name: '', role: 'approver', password: '' })
                 }}
                 style={{
                   flex: 1,
