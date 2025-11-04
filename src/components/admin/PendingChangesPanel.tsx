@@ -13,6 +13,7 @@ interface PendingChangesPanelProps {
 export default function PendingChangesPanel({ pendingChanges, onDataChange, userRole }: PendingChangesPanelProps) {
   const [publishing, setPublishing] = useState(false)
   const [selectedChanges, setSelectedChanges] = useState<Set<string>>(new Set())
+  const isEditor = userRole === 'editor'
 
   const pendingItems = pendingChanges.filter(c => c.status === 'pending')
   const approvedItems = pendingChanges.filter(c => c.status === 'approved')
@@ -258,7 +259,7 @@ export default function PendingChangesPanel({ pendingChanges, onDataChange, user
           borderRadius: 'var(--border-radius-large)',
           border: '1px solid var(--border-color)'
         }}>
-          {selectedChanges.size > 0 && (
+          {selectedChanges.size > 0 && !isEditor && (
             <button
               onClick={handleBulkApprove}
               style={{
@@ -349,44 +350,62 @@ export default function PendingChangesPanel({ pendingChanges, onDataChange, user
                     {renderChangeDetails(change)}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <input
-                      type="checkbox"
-                      checked={selectedChanges.has(change.id)}
-                      onChange={() => toggleSelection(change.id)}
-                      style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                    />
-                    <button
-                      onClick={() => handleApprove(change.id)}
-                      style={{
+                    {!isEditor && (
+                      <>
+                        <input
+                          type="checkbox"
+                          checked={selectedChanges.has(change.id)}
+                          onChange={() => toggleSelection(change.id)}
+                          style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                        />
+                        <button
+                          onClick={() => handleApprove(change.id)}
+                          style={{
+                            padding: '8px 12px',
+                            background: 'var(--success-color)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleReject(change.id)}
+                          style={{
+                            padding: '8px 12px',
+                            background: 'white',
+                            color: 'var(--error-color)',
+                            border: '1px solid var(--error-color)',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          Reject
+                        </button>
+                      </>
+                    )}
+                    {isEditor && (
+                      <div style={{
                         padding: '8px 12px',
-                        background: 'var(--success-color)',
-                        color: 'white',
-                        border: 'none',
+                        background: 'rgba(107, 114, 128, 0.1)',
+                        border: '1px solid rgba(107, 114, 128, 0.3)',
                         borderRadius: '6px',
-                        cursor: 'pointer',
-                        fontSize: '13px',
-                        fontWeight: '600',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => handleReject(change.id)}
-                      style={{
-                        padding: '8px 12px',
-                        background: 'white',
-                        color: 'var(--error-color)',
-                        border: '1px solid var(--error-color)',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        fontSize: '13px',
-                        fontWeight: '600',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      Reject
-                    </button>
+                        fontSize: '12px',
+                        color: 'var(--secondary-text-color)',
+                        textAlign: 'center',
+                        fontWeight: '600'
+                      }}>
+                        Awaiting Approval
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
