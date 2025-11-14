@@ -10,10 +10,10 @@
   },
   {
     "id": "user-jenna-burgess",
-    "email": "j.burgess@heatoneye.com",
+    "email": "jburgess@heatoneye.com",
     "name": "Jenna Burgess",
     "role": "superadmin",
-    "passwordHash": "$2b$10$HyuP8sHGCCGYX0KxPDSO7e7i.R0IDT9O8dDKm5zDTv05cj.50Zsyy",
+    "passwordHash": "$2b$10$LUpIBb3GQW1TSmn.a4Ebx.9Aggv.L4Dc1PBrXU.1EAyo51//PCPmG",
     "addedAt": "2025-11-14T00:00:00.000Z",
     "addedBy": "jryan5150@gmail.com"
   },

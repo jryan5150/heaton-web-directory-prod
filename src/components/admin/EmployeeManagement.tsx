@@ -14,6 +14,17 @@ export default function EmployeeManagement({ employees, onDataChange }: Employee
   const [searchTerm, setSearchTerm] = useState('')
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [newEmployee, setNewEmployee] = useState<Partial<Employee>>({
+    id: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    extension: '',
+    location: '',
+    team: '',
+    title: '',
+    department: ''
+  })
 
   const filteredEmployees = employees.filter(emp => {
     const search = searchTerm.toLowerCase()
@@ -82,6 +93,64 @@ export default function EmployeeManagement({ employees, onDataChange }: Employee
       alert('Deletion submitted for approval!')
     } catch (error) {
       alert('Error submitting deletion')
+    }
+  }
+
+  const handleAddEmployee = async () => {
+    // Validate required fields
+    if (!newEmployee.firstName || !newEmployee.lastName || !newEmployee.location || !newEmployee.team) {
+      alert('Please fill in all required fields (First Name, Last Name, Location, Team)')
+      return
+    }
+
+    // Generate a temporary ID for the new employee
+    const tempId = `emp-${Date.now()}-new`
+    const employeeToAdd: Employee = {
+      id: tempId,
+      firstName: newEmployee.firstName,
+      lastName: newEmployee.lastName,
+      email: newEmployee.email || '',
+      extension: newEmployee.extension || '',
+      location: newEmployee.location,
+      team: newEmployee.team,
+      title: newEmployee.title || '',
+      department: newEmployee.department || ''
+    }
+
+    const change: PendingChange = {
+      id: ``,
+      type: 'add',
+      employeeId: tempId,
+      after: employeeToAdd,
+      proposedBy: 'Admin',
+      proposedAt: new Date().toISOString(),
+      status: 'pending'
+    }
+
+    try {
+      await fetch('/api/admin/pending', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(change)
+      })
+
+      // Reset form and close modal
+      setNewEmployee({
+        id: '',
+        firstName: '',
+        lastName: '',
+        email: '',
+        extension: '',
+        location: '',
+        team: '',
+        title: '',
+        department: ''
+      })
+      setShowAddForm(false)
+      onDataChange()
+      alert('New employee submitted for approval!')
+    } catch (error) {
+      alert('Error submitting new employee')
     }
   }
 
@@ -289,6 +358,182 @@ export default function EmployeeManagement({ employees, onDataChange }: Employee
                     border: '1px solid var(--border-color)',
                     borderRadius: '6px',
                     cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Employee Modal */}
+      {showAddForm && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '24px'
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: 'var(--border-radius-large)',
+            padding: '24px',
+            maxWidth: '500px',
+            width: '100%',
+            maxHeight: '90vh',
+            overflowY: 'auto'
+          }}>
+            <h3 style={{ marginTop: 0 }}>Add New Employee</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <input
+                value={newEmployee.firstName}
+                onChange={(e) => setNewEmployee({...newEmployee, firstName: e.target.value})}
+                placeholder="First Name *"
+                style={{
+                  padding: '10px',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '6px',
+                  fontSize: '14px'
+                }}
+              />
+              <input
+                value={newEmployee.lastName}
+                onChange={(e) => setNewEmployee({...newEmployee, lastName: e.target.value})}
+                placeholder="Last Name *"
+                style={{
+                  padding: '10px',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '6px',
+                  fontSize: '14px'
+                }}
+              />
+              <input
+                value={newEmployee.email || ''}
+                onChange={(e) => setNewEmployee({...newEmployee, email: e.target.value})}
+                placeholder="Email"
+                style={{
+                  padding: '10px',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '6px',
+                  fontSize: '14px'
+                }}
+              />
+              <input
+                value={newEmployee.extension || ''}
+                onChange={(e) => setNewEmployee({...newEmployee, extension: e.target.value})}
+                placeholder="Extension"
+                style={{
+                  padding: '10px',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '6px',
+                  fontSize: '14px'
+                }}
+              />
+              <select
+                value={newEmployee.location}
+                onChange={(e) => setNewEmployee({...newEmployee, location: e.target.value})}
+                style={{
+                  padding: '10px',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '6px',
+                  fontSize: '14px'
+                }}
+              >
+                <option value="">Select Location *</option>
+                <option value="Tyler">Tyler</option>
+                <option value="Athens">Athens</option>
+                <option value="Longview">Longview</option>
+                <option value="Gun Barrel City">Gun Barrel City</option>
+              </select>
+              <input
+                value={newEmployee.team || ''}
+                onChange={(e) => setNewEmployee({...newEmployee, team: e.target.value})}
+                placeholder="Team *"
+                style={{
+                  padding: '10px',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '6px',
+                  fontSize: '14px'
+                }}
+              />
+              <input
+                value={newEmployee.title || ''}
+                onChange={(e) => setNewEmployee({...newEmployee, title: e.target.value})}
+                placeholder="Title"
+                style={{
+                  padding: '10px',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '6px',
+                  fontSize: '14px'
+                }}
+              />
+              <input
+                value={newEmployee.department || ''}
+                onChange={(e) => setNewEmployee({...newEmployee, department: e.target.value})}
+                placeholder="Department"
+                style={{
+                  padding: '10px',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '6px',
+                  fontSize: '14px'
+                }}
+              />
+              <div style={{
+                marginTop: '8px',
+                padding: '8px',
+                background: 'rgba(49, 130, 206, 0.1)',
+                borderRadius: '6px',
+                fontSize: '12px',
+                color: 'var(--secondary-text-color)'
+              }}>
+                * Required fields
+              </div>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+                <button
+                  onClick={handleAddEmployee}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    background: 'var(--success-color)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    fontSize: '14px'
+                  }}
+                >
+                  Submit for Approval
+                </button>
+                <button
+                  onClick={() => {
+                    setShowAddForm(false)
+                    setNewEmployee({
+                      id: '',
+                      firstName: '',
+                      lastName: '',
+                      email: '',
+                      extension: '',
+                      location: '',
+                      team: '',
+                      title: '',
+                      department: ''
+                    })
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    background: 'white',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px'
                   }}
                 >
                   Cancel
