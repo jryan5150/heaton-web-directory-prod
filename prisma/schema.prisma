@@ -1,0 +1,79 @@
+// Prisma Schema for Heaton Eye Staff Directory
+// Database: Vercel Postgres (Neon)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+}
+
+// Employee directory records
+model Employee {
+  id            String   @id @default(cuid())
+  firstName     String
+  lastName      String
+  email         String?
+  extension     String?
+  phoneNumber   String?
+  did           String?
+  location      String
+  team          String
+  title         String?
+  jobTitle      String?
+  department    String?
+  photoUrl      String?
+  avatarUrl     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([location])
+  @@index([lastName, firstName])
+}
+
+// Admin portal users
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         String   // superadmin, approver, editor
+  addedAt      DateTime @default(now())
+  addedBy      String
+
+  @@index([email])
+}
+
+// Pending changes for approval workflow
+model PendingChange {
+  id          String   @id @default(cuid())
+  type        String   // add, edit, delete
+  employeeId  String?  // Optional for 'add' operations
+  beforeData  Json?    // Employee data before change
+  afterData   Json?    // Employee data after change
+  status      String   @default("pending") // pending, approved, rejected
+  proposedBy  String
+  proposedAt  DateTime @default(now())
+  approvedBy  String?
+  approvedAt  DateTime?
+  notes       String?
+
+  @@index([status])
+  @@index([proposedAt])
+}
+
+// Version history for rollback
+model Version {
+  id          String   @id @default(cuid())
+  versionId   String   @unique
+  timestamp   DateTime @default(now())
+  author      String
+  changeCount Int
+  snapshot    Json     // Full employee list at this version
+  description String?
+
+  @@index([timestamp])
+}

@@ -47,3 +47,5 @@ dist/
 *.dmg
 *.AppImage
 electron/create-icon.html
+
+/src/generated/prisma

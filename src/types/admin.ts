@@ -22,6 +22,8 @@ export interface PendingChange {
   proposedBy: string
   proposedAt: string
   status: 'pending' | 'approved' | 'rejected'
+  approvedBy?: string  // Who approved/rejected
+  approvedAt?: string  // When it was approved/rejected
   notes?: string
 }
 

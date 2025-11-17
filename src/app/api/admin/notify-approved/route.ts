@@ -1,20 +1,15 @@
 import { NextResponse } from 'next/server'
-import { promises as fs } from 'fs'
-import path from 'path'
+import prisma from '@/lib/db'
 import { Resend } from 'resend'
-import { PendingChange } from '@/types/admin'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function GET() {
   try {
-    // Read pending changes
-    const changesPath = path.join(process.cwd(), 'data', 'pending-changes.json')
-    const changesData = await fs.readFile(changesPath, 'utf-8')
-    const pendingChanges: PendingChange[] = JSON.parse(changesData)
-
-    // Filter for approved changes
-    const approvedChanges = pendingChanges.filter(c => c.status === 'approved')
+    // Read approved changes from database
+    const approvedChanges = await prisma.pendingChange.findMany({
+      where: { status: 'approved' }
+    })
 
     if (approvedChanges.length === 0) {
       return NextResponse.json({

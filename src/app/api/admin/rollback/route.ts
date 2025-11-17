@@ -1,29 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromCookie, canPublish } from '@/lib/auth-helpers'
-import fs from 'fs'
-import path from 'path'
+import prisma from '@/lib/db'
 import { Employee } from '@/types/employee'
-import { ActivityLogEntry } from '@/types/admin'
-
-const EMPLOYEES_FILE = path.join(process.cwd(), 'data', 'employees.json')
-const ACTIVITY_LOG_FILE = path.join(process.cwd(), 'data', 'activity-log.json')
-const VERSIONS_DIR = path.join(process.cwd(), 'data', 'versions')
-
-function writeEmployees(employees: Employee[]) {
-  fs.writeFileSync(EMPLOYEES_FILE, JSON.stringify(employees, null, 2))
-}
-
-function logActivity(entry: ActivityLogEntry) {
-  let log: ActivityLogEntry[] = []
-  if (fs.existsSync(ACTIVITY_LOG_FILE)) {
-    log = JSON.parse(fs.readFileSync(ACTIVITY_LOG_FILE, 'utf-8'))
-  }
-  log.unshift(entry)
-  if (log.length > 100) {
-    log = log.slice(0, 100)
-  }
-  fs.writeFileSync(ACTIVITY_LOG_FILE, JSON.stringify(log, null, 2))
-}
 
 // POST - Rollback to a specific version
 export async function POST(request: NextRequest) {
@@ -45,44 +23,77 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Version ID required' }, { status: 400 })
     }
 
-    // Find and load the version
-    const versionFile = path.join(VERSIONS_DIR, `${versionId}.json`)
+    // Find the version in database
+    const version = await prisma.version.findFirst({
+      where: { versionId }
+    })
 
-    if (!fs.existsSync(versionFile)) {
+    if (!version) {
       return NextResponse.json({ error: 'Version not found' }, { status: 404 })
     }
 
-    const versionData = JSON.parse(fs.readFileSync(versionFile, 'utf-8'))
+    // Get current employees for backup
+    const currentEmployees = await prisma.employee.findMany()
+    const currentSnapshot = currentEmployees.map(emp => ({
+      id: emp.id,
+      firstName: emp.firstName,
+      lastName: emp.lastName,
+      email: emp.email,
+      extension: emp.extension,
+      phoneNumber: emp.phoneNumber,
+      did: emp.did,
+      location: emp.location,
+      team: emp.team,
+      title: emp.title,
+      jobTitle: emp.jobTitle,
+      department: emp.department,
+      photoUrl: emp.photoUrl,
+      avatarUrl: emp.avatarUrl,
+    }))
 
-    // Create a backup of current state before rollback
-    const currentEmployees = JSON.parse(fs.readFileSync(EMPLOYEES_FILE, 'utf-8'))
+    // Create a backup version before rollback
     const backupId = `rollback-backup-${Date.now()}`
-    const backupFile = path.join(VERSIONS_DIR, `${backupId}.json`)
-    fs.writeFileSync(backupFile, JSON.stringify({
-      id: backupId,
-      timestamp: new Date().toISOString(),
-      employeeCount: currentEmployees.length,
-      changes: [`Backup before rollback to ${versionId}`],
-      employees: currentEmployees
-    }, null, 2))
-
-    // Restore the version
-    writeEmployees(versionData.employees)
-
-    // Log activity
-    logActivity({
-      id: `activity-${Date.now()}`,
-      action: 'rollback',
-      details: `Rolled back to version ${versionId} (${versionData.employeeCount} employees)`,
-      author,
-      timestamp: new Date().toISOString(),
-      type: 'rollback'
+    await prisma.version.create({
+      data: {
+        versionId: backupId,
+        timestamp: new Date(),
+        author,
+        changeCount: 0,
+        snapshot: currentSnapshot,
+        description: `Backup before rollback to ${versionId}`
+      }
     })
+
+    // Get employees from the version snapshot
+    const snapshotEmployees = version.snapshot as unknown as Employee[]
+
+    // Replace all employees with snapshot data using transaction
+    await prisma.$transaction([
+      prisma.employee.deleteMany(),
+      ...snapshotEmployees.map(emp => prisma.employee.create({
+        data: {
+          id: emp.id,
+          firstName: emp.firstName,
+          lastName: emp.lastName,
+          email: emp.email || null,
+          extension: emp.extension || null,
+          phoneNumber: emp.phoneNumber || null,
+          did: emp.did || null,
+          location: emp.location,
+          team: emp.team || '',
+          title: emp.title || null,
+          jobTitle: emp.jobTitle || null,
+          department: emp.department || null,
+          photoUrl: emp.photoUrl || null,
+          avatarUrl: emp.avatarUrl || null,
+        }
+      }))
+    ])
 
     return NextResponse.json({
       success: true,
       versionId,
-      employeeCount: versionData.employeeCount,
+      employeeCount: snapshotEmployees.length,
       backupId
     })
   } catch (error) {

@@ -1,34 +1,31 @@
 import { NextResponse } from 'next/server'
-import fs from 'fs'
-import path from 'path'
-
-const VERSIONS_DIR = path.join(process.cwd(), 'data', 'versions')
+import prisma from '@/lib/db'
 
 // GET - Get all version history
 export async function GET() {
   try {
-    if (!fs.existsSync(VERSIONS_DIR)) {
-      return NextResponse.json([])
-    }
-
-    const files = fs.readdirSync(VERSIONS_DIR)
-      .filter(f => f.endsWith('.json'))
-      .sort()
-      .reverse() // Newest first
-
-    const versions = files.map(file => {
-      const filepath = path.join(VERSIONS_DIR, file)
-      const data = JSON.parse(fs.readFileSync(filepath, 'utf-8'))
-      // Return metadata only, not full employee data
-      return {
-        id: data.id,
-        timestamp: data.timestamp,
-        employeeCount: data.employeeCount,
-        changes: data.changes
+    const versions = await prisma.version.findMany({
+      orderBy: { timestamp: 'desc' },
+      select: {
+        versionId: true,
+        timestamp: true,
+        author: true,
+        changeCount: true,
+        description: true,
+        // Don't include snapshot to reduce payload
       }
     })
 
-    return NextResponse.json(versions)
+    // Map to expected format
+    const mappedVersions = versions.map(v => ({
+      id: v.versionId,
+      timestamp: v.timestamp.toISOString(),
+      author: v.author,
+      changeCount: v.changeCount,
+      description: v.description
+    }))
+
+    return NextResponse.json(mappedVersions)
   } catch (error) {
     console.error('Error reading versions:', error)
     return NextResponse.json({ error: 'Failed to fetch versions' }, { status: 500 })

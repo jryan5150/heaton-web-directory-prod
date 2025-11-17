@@ -1,64 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromCookie, canPublish } from '@/lib/auth-helpers'
-import fs from 'fs'
-import path from 'path'
+import prisma from '@/lib/db'
 import { Employee } from '@/types/employee'
-import { PendingChange, ActivityLogEntry } from '@/types/admin'
-
-const EMPLOYEES_FILE = path.join(process.cwd(), 'data', 'employees.json')
-const PENDING_FILE = path.join(process.cwd(), 'data', 'pending-changes.json')
-const ACTIVITY_LOG_FILE = path.join(process.cwd(), 'data', 'activity-log.json')
-const VERSIONS_DIR = path.join(process.cwd(), 'data', 'versions')
-
-function readEmployees(): Employee[] {
-  const data = fs.readFileSync(EMPLOYEES_FILE, 'utf-8')
-  return JSON.parse(data)
-}
-
-function writeEmployees(employees: Employee[]) {
-  fs.writeFileSync(EMPLOYEES_FILE, JSON.stringify(employees, null, 2))
-}
-
-function readPendingChanges(): PendingChange[] {
-  if (!fs.existsSync(PENDING_FILE)) return []
-  const data = fs.readFileSync(PENDING_FILE, 'utf-8')
-  return JSON.parse(data)
-}
-
-function writePendingChanges(changes: PendingChange[]) {
-  fs.writeFileSync(PENDING_FILE, JSON.stringify(changes, null, 2))
-}
-
-function createVersionSnapshot(employees: Employee[], changes: PendingChange[]) {
-  const timestamp = new Date().toISOString()
-  const versionId = `v-${Date.now()}`
-  const filename = `${versionId}.json`
-  const filepath = path.join(VERSIONS_DIR, filename)
-
-  const versionData = {
-    id: versionId,
-    timestamp,
-    employeeCount: employees.length,
-    changes: changes.map(c => `${c.type}: ${c.after?.firstName} ${c.after?.lastName || ''}`),
-    employees
-  }
-
-  fs.writeFileSync(filepath, JSON.stringify(versionData, null, 2))
-  return versionId
-}
-
-function logActivity(entry: ActivityLogEntry) {
-  let log: ActivityLogEntry[] = []
-  if (fs.existsSync(ACTIVITY_LOG_FILE)) {
-    log = JSON.parse(fs.readFileSync(ACTIVITY_LOG_FILE, 'utf-8'))
-  }
-  log.unshift(entry) // Add to beginning
-  // Keep only last 100 entries
-  if (log.length > 100) {
-    log = log.slice(0, 100)
-  }
-  fs.writeFileSync(ACTIVITY_LOG_FILE, JSON.stringify(log, null, 2))
-}
 
 // POST - Publish approved changes to production
 export async function POST(request: NextRequest) {
@@ -76,9 +19,10 @@ export async function POST(request: NextRequest) {
 
     const { author = user.name || 'Admin' } = await request.json()
 
-    // Get approved changes
-    const allChanges = readPendingChanges()
-    const approvedChanges = allChanges.filter(c => c.status === 'approved')
+    // Get approved changes from database
+    const approvedChanges = await prisma.pendingChange.findMany({
+      where: { status: 'approved' }
+    })
 
     if (approvedChanges.length === 0) {
       return NextResponse.json({
@@ -86,60 +30,114 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Load current employees
-    let employees = readEmployees()
+    // Load current employees from database
+    const currentEmployees = await prisma.employee.findMany()
+    const employeeMap = new Map(currentEmployees.map(e => [e.id, e]))
 
     // Create version snapshot BEFORE applying changes
-    const versionId = createVersionSnapshot(employees, approvedChanges)
+    const versionId = `v-${Date.now()}`
+    const snapshotData = currentEmployees.map(emp => ({
+      id: emp.id,
+      firstName: emp.firstName,
+      lastName: emp.lastName,
+      email: emp.email,
+      extension: emp.extension,
+      phoneNumber: emp.phoneNumber,
+      did: emp.did,
+      location: emp.location,
+      team: emp.team,
+      title: emp.title,
+      jobTitle: emp.jobTitle,
+      department: emp.department,
+      photoUrl: emp.photoUrl,
+      avatarUrl: emp.avatarUrl,
+    }))
 
-    // Apply changes
+    await prisma.version.create({
+      data: {
+        versionId,
+        timestamp: new Date(),
+        author,
+        changeCount: approvedChanges.length,
+        snapshot: snapshotData,
+        description: `Published ${approvedChanges.length} changes`
+      }
+    })
+
+    // Apply changes to database
     for (const change of approvedChanges) {
+      const afterData = change.afterData as Employee | null
+
       switch (change.type) {
         case 'add':
-          if (change.after) {
-            employees.push(change.after)
+          if (afterData) {
+            await prisma.employee.create({
+              data: {
+                id: afterData.id,
+                firstName: afterData.firstName,
+                lastName: afterData.lastName,
+                email: afterData.email || null,
+                extension: afterData.extension || null,
+                phoneNumber: afterData.phoneNumber || null,
+                did: afterData.did || null,
+                location: afterData.location,
+                team: afterData.team || '',
+                title: afterData.title || null,
+                jobTitle: afterData.jobTitle || null,
+                department: afterData.department || null,
+                photoUrl: afterData.photoUrl || null,
+                avatarUrl: afterData.avatarUrl || null,
+              }
+            })
           }
           break
 
         case 'edit':
-          if (change.employeeId && change.after) {
-            const index = employees.findIndex(e => e.id === change.employeeId)
-            if (index !== -1) {
-              employees[index] = change.after
-            }
+          if (change.employeeId && afterData) {
+            await prisma.employee.update({
+              where: { id: change.employeeId },
+              data: {
+                firstName: afterData.firstName,
+                lastName: afterData.lastName,
+                email: afterData.email || null,
+                extension: afterData.extension || null,
+                phoneNumber: afterData.phoneNumber || null,
+                did: afterData.did || null,
+                location: afterData.location,
+                team: afterData.team || '',
+                title: afterData.title || null,
+                jobTitle: afterData.jobTitle || null,
+                department: afterData.department || null,
+                photoUrl: afterData.photoUrl || null,
+                avatarUrl: afterData.avatarUrl || null,
+              }
+            })
           }
           break
 
         case 'delete':
           if (change.employeeId) {
-            employees = employees.filter(e => e.id !== change.employeeId)
+            await prisma.employee.delete({
+              where: { id: change.employeeId }
+            })
           }
           break
       }
     }
 
-    // Write updated employees to production
-    writeEmployees(employees)
-
     // Remove approved changes from pending
-    const remainingChanges = allChanges.filter(c => c.status !== 'approved')
-    writePendingChanges(remainingChanges)
-
-    // Log activity
-    logActivity({
-      id: `activity-${Date.now()}`,
-      action: 'publish',
-      details: `Published ${approvedChanges.length} changes (${versionId})`,
-      author,
-      timestamp: new Date().toISOString(),
-      type: 'publish'
+    await prisma.pendingChange.deleteMany({
+      where: { status: 'approved' }
     })
+
+    // Get updated employee count
+    const totalEmployees = await prisma.employee.count()
 
     return NextResponse.json({
       success: true,
       publishedCount: approvedChanges.length,
       versionId,
-      totalEmployees: employees.length
+      totalEmployees
     })
   } catch (error) {
     console.error('Publish error:', error)

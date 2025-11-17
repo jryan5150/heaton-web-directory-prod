@@ -1,17 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import fs from 'fs'
-import path from 'path'
-import { User } from '@/types/admin'
+import prisma from '@/lib/db'
 import { verifyPassword, setSessionCookie } from '@/lib/auth-helpers'
-
-const USERS_FILE = path.join(process.cwd(), 'data', 'users.json')
-
-function getUsers(): User[] {
-  if (!fs.existsSync(USERS_FILE)) {
-    return []
-  }
-  return JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'))
-}
+import { UserRole } from '@/types/admin'
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,8 +14,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const users = getUsers()
-    const user = users.find(u => u.email.toLowerCase() === email.toLowerCase())
+    const user = await prisma.user.findFirst({
+      where: {
+        email: {
+          equals: email,
+          mode: 'insensitive'
+        }
+      }
+    })
 
     if (!user) {
       return NextResponse.json(
@@ -49,7 +45,7 @@ export async function POST(request: NextRequest) {
       id: user.id,
       email: user.email,
       name: user.name,
-      role: user.role
+      role: user.role as UserRole
     })
 
     return NextResponse.json({

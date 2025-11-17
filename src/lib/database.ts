@@ -1,35 +1,40 @@
 /**
  * Database operations for employee data
- * Uses JSON file storage for simplicity and Vercel compatibility
+ * Uses Prisma with Vercel Postgres for persistent storage
  */
 
-import fs from 'fs'
-import path from 'path'
+import prisma from './db'
 import { Employee } from '@/types/employee'
-
-const DATA_DIR = path.join(process.cwd(), 'data')
-const EMPLOYEES_FILE = path.join(DATA_DIR, 'employees.json')
-
-/**
- * Ensure data directory exists
- */
-function ensureDataDir() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true })
-  }
-}
 
 /**
  * Get all employees from database
  */
 export async function getAllEmployees(): Promise<Employee[]> {
   try {
-    if (!fs.existsSync(EMPLOYEES_FILE)) {
-      return []
-    }
+    const employees = await prisma.employee.findMany({
+      orderBy: [
+        { lastName: 'asc' },
+        { firstName: 'asc' }
+      ]
+    })
 
-    const data = fs.readFileSync(EMPLOYEES_FILE, 'utf-8')
-    return JSON.parse(data)
+    // Map Prisma model to Employee type
+    return employees.map(emp => ({
+      id: emp.id,
+      firstName: emp.firstName,
+      lastName: emp.lastName,
+      email: emp.email || undefined,
+      extension: emp.extension || undefined,
+      phoneNumber: emp.phoneNumber || undefined,
+      did: emp.did || undefined,
+      location: emp.location,
+      team: emp.team,
+      title: emp.title || undefined,
+      jobTitle: emp.jobTitle || undefined,
+      department: emp.department || undefined,
+      photoUrl: emp.photoUrl || undefined,
+      avatarUrl: emp.avatarUrl || undefined,
+    }))
   } catch (error) {
     console.error('Error reading employees:', error)
     return []
@@ -37,12 +42,32 @@ export async function getAllEmployees(): Promise<Employee[]> {
 }
 
 /**
- * Save employees to database
+ * Save employees to database (bulk replace)
  */
 export async function saveEmployees(employees: Employee[]): Promise<void> {
   try {
-    ensureDataDir()
-    fs.writeFileSync(EMPLOYEES_FILE, JSON.stringify(employees, null, 2))
+    // Use transaction to delete all and insert new
+    await prisma.$transaction([
+      prisma.employee.deleteMany(),
+      ...employees.map(emp => prisma.employee.create({
+        data: {
+          id: emp.id,
+          firstName: emp.firstName,
+          lastName: emp.lastName,
+          email: emp.email || null,
+          extension: emp.extension || null,
+          phoneNumber: emp.phoneNumber || null,
+          did: emp.did || null,
+          location: emp.location,
+          team: emp.team || '',
+          title: emp.title || null,
+          jobTitle: emp.jobTitle || null,
+          department: emp.department || null,
+          photoUrl: emp.photoUrl || null,
+          avatarUrl: emp.avatarUrl || null,
+        }
+      }))
+    ])
   } catch (error) {
     console.error('Error saving employees:', error)
     throw new Error('Failed to save employees')
@@ -53,57 +78,139 @@ export async function saveEmployees(employees: Employee[]): Promise<void> {
  * Get employee by ID
  */
 export async function getEmployeeById(id: string): Promise<Employee | null> {
-  const employees = await getAllEmployees()
-  return employees.find(emp => emp.id === id) || null
+  try {
+    const emp = await prisma.employee.findUnique({
+      where: { id }
+    })
+
+    if (!emp) return null
+
+    return {
+      id: emp.id,
+      firstName: emp.firstName,
+      lastName: emp.lastName,
+      email: emp.email || undefined,
+      extension: emp.extension || undefined,
+      phoneNumber: emp.phoneNumber || undefined,
+      did: emp.did || undefined,
+      location: emp.location,
+      team: emp.team,
+      title: emp.title || undefined,
+      jobTitle: emp.jobTitle || undefined,
+      department: emp.department || undefined,
+      photoUrl: emp.photoUrl || undefined,
+      avatarUrl: emp.avatarUrl || undefined,
+    }
+  } catch (error) {
+    console.error('Error getting employee:', error)
+    return null
+  }
 }
 
 /**
  * Update employee
  */
 export async function updateEmployee(id: string, updates: Partial<Employee>): Promise<Employee | null> {
-  const employees = await getAllEmployees()
-  const index = employees.findIndex(emp => emp.id === id)
+  try {
+    const emp = await prisma.employee.update({
+      where: { id },
+      data: {
+        firstName: updates.firstName,
+        lastName: updates.lastName,
+        email: updates.email || null,
+        extension: updates.extension || null,
+        phoneNumber: updates.phoneNumber || null,
+        did: updates.did || null,
+        location: updates.location,
+        team: updates.team,
+        title: updates.title || null,
+        jobTitle: updates.jobTitle || null,
+        department: updates.department || null,
+        photoUrl: updates.photoUrl || null,
+        avatarUrl: updates.avatarUrl || null,
+      }
+    })
 
-  if (index === -1) {
+    return {
+      id: emp.id,
+      firstName: emp.firstName,
+      lastName: emp.lastName,
+      email: emp.email || undefined,
+      extension: emp.extension || undefined,
+      phoneNumber: emp.phoneNumber || undefined,
+      did: emp.did || undefined,
+      location: emp.location,
+      team: emp.team,
+      title: emp.title || undefined,
+      jobTitle: emp.jobTitle || undefined,
+      department: emp.department || undefined,
+      photoUrl: emp.photoUrl || undefined,
+      avatarUrl: emp.avatarUrl || undefined,
+    }
+  } catch (error) {
+    console.error('Error updating employee:', error)
     return null
   }
-
-  employees[index] = { ...employees[index], ...updates }
-  await saveEmployees(employees)
-
-  return employees[index]
 }
 
 /**
  * Delete employee
  */
 export async function deleteEmployee(id: string): Promise<boolean> {
-  const employees = await getAllEmployees()
-  const filtered = employees.filter(emp => emp.id !== id)
-
-  if (filtered.length === employees.length) {
+  try {
+    await prisma.employee.delete({
+      where: { id }
+    })
+    return true
+  } catch (error) {
+    console.error('Error deleting employee:', error)
     return false
   }
-
-  await saveEmployees(filtered)
-  return true
 }
 
 /**
  * Add new employee
  */
 export async function addEmployee(employee: Omit<Employee, 'id'>): Promise<Employee> {
-  const employees = await getAllEmployees()
+  try {
+    const emp = await prisma.employee.create({
+      data: {
+        firstName: employee.firstName,
+        lastName: employee.lastName,
+        email: employee.email || null,
+        extension: employee.extension || null,
+        phoneNumber: employee.phoneNumber || null,
+        did: employee.did || null,
+        location: employee.location,
+        team: employee.team || '',
+        title: employee.title || null,
+        jobTitle: employee.jobTitle || null,
+        department: employee.department || null,
+        photoUrl: employee.photoUrl || null,
+        avatarUrl: employee.avatarUrl || null,
+      }
+    })
 
-  const newEmployee: Employee = {
-    ...employee,
-    id: `emp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    return {
+      id: emp.id,
+      firstName: emp.firstName,
+      lastName: emp.lastName,
+      email: emp.email || undefined,
+      extension: emp.extension || undefined,
+      phoneNumber: emp.phoneNumber || undefined,
+      did: emp.did || undefined,
+      location: emp.location,
+      team: emp.team,
+      title: emp.title || undefined,
+      jobTitle: emp.jobTitle || undefined,
+      department: emp.department || undefined,
+      photoUrl: emp.photoUrl || undefined,
+      avatarUrl: emp.avatarUrl || undefined,
+    }
+  } catch (error) {
+    console.error('Error adding employee:', error)
+    throw new Error('Failed to add employee')
   }
-
-  employees.push(newEmployee)
-  await saveEmployees(employees)
-
-  return newEmployee
 }
 
 /**

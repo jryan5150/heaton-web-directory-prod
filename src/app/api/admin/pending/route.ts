@@ -1,33 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server'
-import fs from 'fs'
-import path from 'path'
+import prisma from '@/lib/db'
 import { PendingChange } from '@/types/admin'
+import { Employee } from '@/types/employee'
 
-const PENDING_FILE = path.join(process.cwd(), 'data', 'pending-changes.json')
-
-function readPendingChanges(): PendingChange[] {
-  try {
-    if (!fs.existsSync(PENDING_FILE)) {
-      return []
-    }
-    const data = fs.readFileSync(PENDING_FILE, 'utf-8')
-    return JSON.parse(data)
-  } catch (error) {
-    console.error('Error reading pending changes:', error)
-    return []
+// Helper to convert Prisma model to PendingChange type
+function mapToPendingChange(dbChange: {
+  id: string
+  type: string
+  employeeId: string | null
+  beforeData: unknown
+  afterData: unknown
+  status: string
+  proposedBy: string
+  proposedAt: Date
+  approvedBy: string | null
+  approvedAt: Date | null
+  notes: string | null
+}): PendingChange {
+  return {
+    id: dbChange.id,
+    type: dbChange.type as 'add' | 'edit' | 'delete',
+    employeeId: dbChange.employeeId || undefined,
+    before: dbChange.beforeData as Employee | undefined,
+    after: dbChange.afterData as Employee | undefined,
+    status: dbChange.status as 'pending' | 'approved' | 'rejected',
+    proposedBy: dbChange.proposedBy,
+    proposedAt: dbChange.proposedAt.toISOString(),
+    approvedBy: dbChange.approvedBy || undefined,
+    approvedAt: dbChange.approvedAt?.toISOString(),
+    notes: dbChange.notes || undefined,
   }
-}
-
-function writePendingChanges(changes: PendingChange[]) {
-  fs.writeFileSync(PENDING_FILE, JSON.stringify(changes, null, 2))
 }
 
 // GET - Get all pending changes
 export async function GET() {
   try {
-    const changes = readPendingChanges()
-    return NextResponse.json(changes)
+    const changes = await prisma.pendingChange.findMany({
+      orderBy: { proposedAt: 'desc' }
+    })
+    return NextResponse.json(changes.map(mapToPendingChange))
   } catch (error) {
+    console.error('Error fetching pending changes:', error)
     return NextResponse.json({ error: 'Failed to fetch pending changes' }, { status: 500 })
   }
 }
@@ -37,23 +50,25 @@ export async function POST(request: NextRequest) {
   try {
     const change: PendingChange = await request.json()
 
-    // Add ID and timestamp if not provided
-    if (!change.id) {
-      change.id = `change-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    }
-    if (!change.proposedAt) {
-      change.proposedAt = new Date().toISOString()
-    }
-    if (!change.status) {
-      change.status = 'pending'
-    }
+    const newChange = await prisma.pendingChange.create({
+      data: {
+        id: change.id || `change-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        type: change.type,
+        employeeId: change.employeeId || null,
+        beforeData: change.before ? (change.before as object) : undefined,
+        afterData: change.after ? (change.after as object) : undefined,
+        status: change.status || 'pending',
+        proposedBy: change.proposedBy,
+        proposedAt: change.proposedAt ? new Date(change.proposedAt) : new Date(),
+        approvedBy: change.approvedBy || null,
+        approvedAt: change.approvedAt ? new Date(change.approvedAt) : null,
+        notes: change.notes || null,
+      }
+    })
 
-    const changes = readPendingChanges()
-    changes.push(change)
-    writePendingChanges(changes)
-
-    return NextResponse.json(change, { status: 201 })
+    return NextResponse.json(mapToPendingChange(newChange), { status: 201 })
   } catch (error) {
+    console.error('Error creating pending change:', error)
     return NextResponse.json({ error: 'Failed to create pending change' }, { status: 500 })
   }
 }
@@ -61,24 +76,21 @@ export async function POST(request: NextRequest) {
 // PATCH - Update pending change status
 export async function PATCH(request: NextRequest) {
   try {
-    const { id, status, notes } = await request.json()
+    const { id, status, notes, approvedBy, approvedAt } = await request.json()
 
-    const changes = readPendingChanges()
-    const changeIndex = changes.findIndex(c => c.id === id)
+    const updatedChange = await prisma.pendingChange.update({
+      where: { id },
+      data: {
+        status,
+        notes: notes || undefined,
+        approvedBy: approvedBy || undefined,
+        approvedAt: approvedAt ? new Date(approvedAt) : undefined,
+      }
+    })
 
-    if (changeIndex === -1) {
-      return NextResponse.json({ error: 'Change not found' }, { status: 404 })
-    }
-
-    changes[changeIndex].status = status
-    if (notes) {
-      changes[changeIndex].notes = notes
-    }
-
-    writePendingChanges(changes)
-
-    return NextResponse.json(changes[changeIndex])
+    return NextResponse.json(mapToPendingChange(updatedChange))
   } catch (error) {
+    console.error('Error updating pending change:', error)
     return NextResponse.json({ error: 'Failed to update pending change' }, { status: 500 })
   }
 }
@@ -93,17 +105,13 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'ID required' }, { status: 400 })
     }
 
-    const changes = readPendingChanges()
-    const filtered = changes.filter(c => c.id !== id)
-
-    if (filtered.length === changes.length) {
-      return NextResponse.json({ error: 'Change not found' }, { status: 404 })
-    }
-
-    writePendingChanges(filtered)
+    await prisma.pendingChange.delete({
+      where: { id }
+    })
 
     return NextResponse.json({ success: true })
   } catch (error) {
+    console.error('Error deleting pending change:', error)
     return NextResponse.json({ error: 'Failed to delete pending change' }, { status: 500 })
   }
 }

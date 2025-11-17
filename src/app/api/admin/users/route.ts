@@ -1,24 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromCookie, isSuperAdmin, hashPassword } from '@/lib/auth-helpers'
-import fs from 'fs'
-import path from 'path'
-import { User } from '@/types/admin'
-
-const USERS_FILE = path.join(process.cwd(), 'data', 'users.json')
-
-function readUsers(): User[] {
-  if (!fs.existsSync(USERS_FILE)) {
-    return []
-  }
-  return JSON.parse(fs.readFileSync(USERS_FILE, 'utf-8'))
-}
-
-function writeUsers(users: User[]) {
-  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2))
-}
+import prisma from '@/lib/db'
 
 // GET - Get all users (superadmin only)
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const user = await getSessionFromCookie()
 
@@ -30,8 +15,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden - Superadmin only' }, { status: 403 })
     }
 
-    const users = readUsers()
-    return NextResponse.json(users)
+    const users = await prisma.user.findMany({
+      orderBy: { addedAt: 'desc' }
+    })
+
+    // Map to expected format
+    const mappedUsers = users.map(u => ({
+      id: u.id,
+      email: u.email,
+      name: u.name,
+      role: u.role,
+      passwordHash: u.passwordHash,
+      addedAt: u.addedAt.toISOString(),
+      addedBy: u.addedBy
+    }))
+
+    return NextResponse.json(mappedUsers)
   } catch (error) {
     console.error('Error reading users:', error)
     return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 })
@@ -61,30 +60,41 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
     }
 
-    const users = readUsers()
-
     // Check if user already exists
-    if (users.some(u => u.email === email)) {
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    })
+
+    if (existingUser) {
       return NextResponse.json({ error: 'User already exists' }, { status: 400 })
     }
 
     // Hash the password
     const passwordHash = await hashPassword(password)
 
-    const newUser: User = {
-      id: `user-${Date.now()}`,
-      email,
-      name,
-      role,
-      passwordHash,
-      addedAt: new Date().toISOString(),
-      addedBy: user.email || 'unknown'
-    }
+    const newUser = await prisma.user.create({
+      data: {
+        email,
+        name,
+        role,
+        passwordHash,
+        addedAt: new Date(),
+        addedBy: user.email || 'unknown'
+      }
+    })
 
-    users.push(newUser)
-    writeUsers(users)
-
-    return NextResponse.json({ success: true, user: newUser })
+    return NextResponse.json({
+      success: true,
+      user: {
+        id: newUser.id,
+        email: newUser.email,
+        name: newUser.name,
+        role: newUser.role,
+        passwordHash: newUser.passwordHash,
+        addedAt: newUser.addedAt.toISOString(),
+        addedBy: newUser.addedBy
+      }
+    })
   } catch (error) {
     console.error('Error adding user:', error)
     return NextResponse.json({ error: 'Failed to add user' }, { status: 500 })
@@ -110,8 +120,9 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'User ID required' }, { status: 400 })
     }
 
-    const users = readUsers()
-    const userToDelete = users.find(u => u.id === id)
+    const userToDelete = await prisma.user.findUnique({
+      where: { id }
+    })
 
     if (!userToDelete) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
@@ -122,8 +133,9 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Cannot delete your own account' }, { status: 400 })
     }
 
-    const updatedUsers = users.filter(u => u.id !== id)
-    writeUsers(updatedUsers)
+    await prisma.user.delete({
+      where: { id }
+    })
 
     return NextResponse.json({ success: true })
   } catch (error) {
