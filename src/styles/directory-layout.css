@@ -154,6 +154,13 @@
   color: var(--text-secondary);
 }
 
+.employee-detail-item--extension {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--heaton-navy);
+  letter-spacing: 0.01em;
+}
+
 .employee-detail-icon {
   width: 14px;
   height: 14px;
