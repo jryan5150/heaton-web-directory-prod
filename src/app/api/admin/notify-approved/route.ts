@@ -2,10 +2,9 @@ import { NextResponse } from 'next/server'
 import prisma from '@/lib/db'
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 export async function GET() {
   try {
+    const resend = new Resend(process.env.RESEND_API_KEY)
     // Read approved changes from database
     const approvedChanges = await prisma.pendingChange.findMany({
       where: { status: 'approved' }

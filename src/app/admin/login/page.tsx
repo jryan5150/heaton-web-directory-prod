@@ -31,7 +31,7 @@ export default function AdminLoginPage() {
       } else {
         setError(data.error || 'Login failed')
       }
-    } catch (err) {
+    } catch {
       setError('An error occurred. Please try again.')
     } finally {
       setLoading(false)
@@ -42,66 +42,92 @@ export default function AdminLoginPage() {
     <div style={{
       minHeight: '100vh',
       display: 'flex',
+      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'var(--background-color)'
+      background: 'linear-gradient(135deg, #0a1f38 0%, #0f2b4c 50%, #163d6b 100%)',
+      padding: '24px'
     }}>
-      <div style={{
-        width: '100%',
-        maxWidth: '400px',
-        padding: '24px'
-      }}>
+      <div style={{ width: '100%', maxWidth: '400px' }}>
+        {/* Brand */}
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <div style={{
+            width: '48px',
+            height: '48px',
+            borderRadius: '12px',
+            background: 'rgba(255,255,255,0.1)',
+            border: '1px solid rgba(255,255,255,0.15)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 16px',
+            backdropFilter: 'blur(8px)'
+          }}>
+            <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="rgba(255,255,255,0.85)" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+          <h1 style={{
+            fontFamily: 'var(--font-heading), Roboto Condensed, sans-serif',
+            fontSize: '20px',
+            fontWeight: '700',
+            color: 'white',
+            letterSpacing: '0.02em',
+            textTransform: 'uppercase',
+            marginBottom: '4px'
+          }}>
+            Heaton Eye Associates
+          </h1>
+          <p style={{
+            fontSize: '13px',
+            color: 'rgba(255,255,255,0.5)',
+            letterSpacing: '0.04em'
+          }}>
+            Admin Portal
+          </p>
+        </div>
+
+        {/* Card */}
         <div style={{
           background: 'white',
-          borderRadius: 'var(--border-radius-large)',
-          padding: '48px',
-          boxShadow: 'var(--shadow-medium)',
-          border: '1px solid var(--border-color)'
+          borderRadius: '16px',
+          padding: '40px 36px',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
         }}>
-          {/* Logo/Header */}
-          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-            <h1 style={{
-              fontSize: '28px',
-              fontWeight: '700',
-              color: 'var(--primary-text-color)',
-              marginBottom: '8px'
-            }}>
-              Heaton Eye Admin
-            </h1>
-            <p style={{
-              fontSize: '14px',
-              color: 'var(--secondary-text-color)',
-              margin: 0
-            }}>
-              Sign in to access the admin portal
-            </p>
-          </div>
+          <h2 style={{
+            fontSize: '18px',
+            fontWeight: '600',
+            color: 'var(--gray-800)',
+            marginBottom: '24px',
+            textAlign: 'center'
+          }}>
+            Sign in
+          </h2>
 
-          {/* Error Message */}
           {error && (
             <div style={{
-              padding: '12px',
-              background: 'rgba(239, 68, 68, 0.1)',
-              border: '1px solid rgba(239, 68, 68, 0.3)',
+              padding: '10px 14px',
+              background: 'rgba(220, 38, 38, 0.06)',
+              border: '1px solid rgba(220, 38, 38, 0.15)',
               borderRadius: '8px',
-              marginBottom: '24px',
-              color: 'var(--error-color)',
-              fontSize: '14px',
+              marginBottom: '20px',
+              color: '#dc2626',
+              fontSize: '13px',
               textAlign: 'center'
             }}>
               {error}
             </div>
           )}
 
-          {/* Login Form */}
           <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: '20px' }}>
+            <div style={{ marginBottom: '16px' }}>
               <label style={{
                 display: 'block',
-                fontSize: '14px',
-                fontWeight: '600',
-                marginBottom: '8px',
-                color: 'var(--primary-text-color)'
+                fontSize: '13px',
+                fontWeight: '500',
+                marginBottom: '6px',
+                color: 'var(--gray-600)'
               }}>
                 Email
               </label>
@@ -113,11 +139,21 @@ export default function AdminLoginPage() {
                 disabled={loading}
                 style={{
                   width: '100%',
-                  padding: '12px',
-                  border: '1px solid var(--border-color)',
+                  padding: '10px 14px',
+                  border: '1px solid var(--gray-200)',
                   borderRadius: '8px',
                   fontSize: '14px',
-                  outline: 'none'
+                  outline: 'none',
+                  transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
+                  color: 'var(--gray-800)'
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--heaton-blue)'
+                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(58,128,222,0.1)'
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--gray-200)'
+                  e.currentTarget.style.boxShadow = 'none'
                 }}
                 placeholder="your.email@heatoneye.com"
               />
@@ -126,10 +162,10 @@ export default function AdminLoginPage() {
             <div style={{ marginBottom: '24px' }}>
               <label style={{
                 display: 'block',
-                fontSize: '14px',
-                fontWeight: '600',
-                marginBottom: '8px',
-                color: 'var(--primary-text-color)'
+                fontSize: '13px',
+                fontWeight: '500',
+                marginBottom: '6px',
+                color: 'var(--gray-600)'
               }}>
                 Password
               </label>
@@ -141,11 +177,21 @@ export default function AdminLoginPage() {
                 disabled={loading}
                 style={{
                   width: '100%',
-                  padding: '12px',
-                  border: '1px solid var(--border-color)',
+                  padding: '10px 14px',
+                  border: '1px solid var(--gray-200)',
                   borderRadius: '8px',
                   fontSize: '14px',
-                  outline: 'none'
+                  outline: 'none',
+                  transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
+                  color: 'var(--gray-800)'
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--heaton-blue)'
+                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(58,128,222,0.1)'
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--gray-200)'
+                  e.currentTarget.style.boxShadow = 'none'
                 }}
                 placeholder="Enter your password"
               />
@@ -156,50 +202,49 @@ export default function AdminLoginPage() {
               disabled={loading}
               style={{
                 width: '100%',
-                padding: '14px',
-                background: loading ? 'var(--secondary-text-color)' : 'var(--accent-color)',
+                padding: '12px',
+                background: loading ? 'var(--gray-300)' : 'linear-gradient(135deg, var(--heaton-navy) 0%, #163d6b 100%)',
                 color: 'white',
                 border: 'none',
-                borderRadius: '8px',
-                fontSize: '16px',
+                borderRadius: '9999px',
+                fontSize: '14px',
                 fontWeight: '600',
-                cursor: loading ? 'not-allowed' : 'pointer'
+                cursor: loading ? 'not-allowed' : 'pointer',
+                letterSpacing: '0.02em',
+                textTransform: 'uppercase',
+                transition: 'all 0.2s ease'
               }}
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
 
-          {/* Info */}
           <div style={{
-            marginTop: '24px',
-            padding: '16px',
-            background: 'var(--background-color)',
+            marginTop: '20px',
+            padding: '12px',
+            background: 'var(--gray-50)',
             borderRadius: '8px',
             textAlign: 'center'
           }}>
-            <p style={{
-              fontSize: '12px',
-              color: 'var(--secondary-text-color)',
-              margin: 0
-            }}>
-              Contact Jace Ryan for access credentials
+            <p style={{ fontSize: '12px', color: 'var(--gray-400)' }}>
+              Contact your administrator for access
             </p>
           </div>
         </div>
 
-        {/* Back Link */}
+        {/* Back */}
         <div style={{ textAlign: 'center', marginTop: '24px' }}>
           <Link
             href="/"
             style={{
-              fontSize: '14px',
-              color: 'var(--accent-color)',
+              fontSize: '13px',
+              color: 'rgba(255,255,255,0.5)',
               textDecoration: 'none',
-              fontWeight: '500'
+              fontWeight: '500',
+              transition: 'color 0.15s ease'
             }}
           >
-            ← Back to Employee Directory
+            &larr; Back to Directory
           </Link>
         </div>
       </div>

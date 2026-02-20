@@ -1,0 +1,287 @@
+/* ==========================================================================
+   Heaton Eye Associates — Design System
+   Professional medical practice aesthetic matching heatoneye.com
+   ========================================================================== */
+
+/* Typography Utilities */
+.font-heading {
+  font-family: var(--font-heading), 'Roboto Condensed', sans-serif;
+}
+
+.font-body {
+  font-family: var(--font-body), 'Source Sans 3', sans-serif;
+}
+
+/* ==========================================================================
+   Brand Header
+   ========================================================================== */
+
+.heaton-header {
+  background: linear-gradient(135deg, var(--heaton-navy-deep) 0%, var(--heaton-navy) 50%, #163d6b 100%);
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(15, 43, 76, 0.25);
+}
+
+.heaton-header-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* Top bar: brand + export */
+.heaton-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 0 16px;
+}
+
+.heaton-brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.heaton-brand-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.heaton-brand-icon svg {
+  width: 22px;
+  height: 22px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.heaton-brand-text h1 {
+  font-family: var(--font-heading), 'Roboto Condensed', sans-serif;
+  font-size: clamp(18px, 2.5vw, 22px);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.heaton-brand-text p {
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 2px 0 0;
+  letter-spacing: 0.04em;
+}
+
+/* Search row */
+.heaton-search-row {
+  padding-bottom: 16px;
+}
+
+.heaton-search-wrapper {
+  position: relative;
+  max-width: 480px;
+}
+
+.heaton-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  color: rgba(255, 255, 255, 0.4);
+  pointer-events: none;
+}
+
+.heaton-search-input {
+  width: 100%;
+  padding: 10px 40px 10px 42px;
+  font-size: 14px;
+  font-family: var(--font-body), sans-serif;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  transition: all 0.2s ease;
+  outline: none;
+  backdrop-filter: blur(4px);
+}
+
+.heaton-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.heaton-search-input:focus {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 0 3px rgba(58, 128, 222, 0.2);
+}
+
+.heaton-search-clear {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: color 0.15s ease;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.heaton-search-clear:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Result count */
+.heaton-result-count {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-top: 8px;
+  padding-left: 4px;
+}
+
+/* ==========================================================================
+   Location Filter Tabs
+   ========================================================================== */
+
+.heaton-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 0 0 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.heaton-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.heaton-tab {
+  padding: 7px 16px;
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-body), sans-serif;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.heaton-tab:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.85);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.heaton-tab--active {
+  background: white;
+  color: var(--heaton-navy);
+  border-color: white;
+  font-weight: 600;
+}
+
+.heaton-tab--active:hover {
+  background: white;
+  color: var(--heaton-navy);
+  border-color: white;
+}
+
+.heaton-tab-count {
+  font-size: 11px;
+  opacity: 0.7;
+  margin-left: 4px;
+}
+
+/* ==========================================================================
+   Export Button (header variant)
+   ========================================================================== */
+
+.heaton-export-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-pill);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+.heaton-export-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: white;
+}
+
+.heaton-export-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Export dropdown */
+.heaton-export-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-default);
+  min-width: 200px;
+  overflow: hidden;
+  z-index: 1000;
+  animation: slideDown 0.15s ease-out;
+}
+
+.heaton-export-option {
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text-primary);
+  transition: background 0.1s ease;
+}
+
+.heaton-export-option:hover {
+  background: var(--gray-50);
+}
+
+.heaton-export-option-label {
+  font-weight: 500;
+}
+
+.heaton-export-option-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 1px;
+}
+
+.heaton-export-divider {
+  height: 1px;
+  background: var(--border-default);
+}

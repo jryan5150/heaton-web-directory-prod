@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { Employee } from '@/types/employee'
-import { ArrowDownTrayIcon } from '@heroicons/react/24/outline'
 
 interface ExportMenuProps {
   employees: Employee[]
@@ -13,7 +12,6 @@ export default function ExportMenu({ employees, selectedLocation }: ExportMenuPr
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
-  // Close menu when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -59,11 +57,9 @@ export default function ExportMenu({ employees, selectedLocation }: ExportMenuPr
   }
 
   const exportToExcel = () => {
-    // For now, export as CSV with .xls extension (Excel will open it)
-    // In the future, we could add xlsx library for proper Excel format
     const headers = ['First Name', 'Last Name', 'Email', 'Extension', 'DID', 'Phone', 'Team', 'Location', 'Department', 'Title']
     const csvContent = [
-      headers.join('\t'), // Tab-separated for better Excel compatibility
+      headers.join('\t'),
       ...employees.map(emp => [
         emp.firstName || '',
         emp.lastName || '',
@@ -95,118 +91,29 @@ export default function ExportMenu({ employees, selectedLocation }: ExportMenuPr
     <div ref={menuRef} style={{ position: 'relative', display: 'inline-block' }}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '10px 16px',
-          background: 'var(--accent-color)',
-          color: 'white',
-          border: 'none',
-          borderRadius: 'var(--border-radius-medium)',
-          cursor: 'pointer',
-          fontSize: '14px',
-          fontWeight: '600',
-          transition: 'all 0.2s ease',
-          boxShadow: 'var(--shadow-small)'
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'var(--accent-color-hover)'
-          e.currentTarget.style.transform = 'translateY(-1px)'
-          e.currentTarget.style.boxShadow = 'var(--shadow-medium)'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'var(--accent-color)'
-          e.currentTarget.style.transform = 'translateY(0)'
-          e.currentTarget.style.boxShadow = 'var(--shadow-small)'
-        }}
+        className="heaton-export-btn"
       >
-        <ArrowDownTrayIcon style={{ width: '18px', height: '18px' }} />
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+        </svg>
         <span>Export</span>
       </button>
 
       {isOpen && (
-        <div style={{
-          position: 'absolute',
-          right: 0,
-          top: 'calc(100% + 8px)',
-          background: 'white',
-          borderRadius: 'var(--border-radius-medium)',
-          boxShadow: 'var(--shadow-large)',
-          border: '1px solid var(--border-color)',
-          minWidth: '180px',
-          overflow: 'hidden',
-          zIndex: 1000,
-          animation: 'fadeIn 0.15s ease-out'
-        }}>
-          <button
-            onClick={exportToCSV}
-            style={{
-              width: '100%',
-              padding: '12px 16px',
-              border: 'none',
-              background: 'none',
-              textAlign: 'left',
-              cursor: 'pointer',
-              fontSize: '14px',
-              color: 'var(--primary-text-color)',
-              transition: 'background 0.15s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'var(--background-color)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'none'
-            }}
-          >
-            <div style={{ fontWeight: '500' }}>Export to CSV</div>
-            <div style={{ fontSize: '12px', color: 'var(--secondary-text-color)', marginTop: '2px' }}>
-              {employees.length} employees
-            </div>
+        <div className="heaton-export-dropdown">
+          <button onClick={exportToCSV} className="heaton-export-option">
+            <div className="heaton-export-option-label">Export as CSV</div>
+            <div className="heaton-export-option-desc">{employees.length} employees</div>
           </button>
-
-          <div style={{ height: '1px', background: 'var(--border-color)' }} />
-
-          <button
-            onClick={exportToExcel}
-            style={{
-              width: '100%',
-              padding: '12px 16px',
-              border: 'none',
-              background: 'none',
-              textAlign: 'left',
-              cursor: 'pointer',
-              fontSize: '14px',
-              color: 'var(--primary-text-color)',
-              transition: 'background 0.15s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'var(--background-color)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'none'
-            }}
-          >
-            <div style={{ fontWeight: '500' }}>Export to Excel</div>
-            <div style={{ fontSize: '12px', color: 'var(--secondary-text-color)', marginTop: '2px' }}>
+          <div className="heaton-export-divider" />
+          <button onClick={exportToExcel} className="heaton-export-option">
+            <div className="heaton-export-option-label">Export as Excel</div>
+            <div className="heaton-export-option-desc">
               {selectedLocation === 'All' ? 'All locations' : selectedLocation}
             </div>
           </button>
         </div>
       )}
-
-      <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(-8px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
     </div>
   )
 }
