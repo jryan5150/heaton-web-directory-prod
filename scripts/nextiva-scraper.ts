@@ -1,3 +1,4 @@
+// @ts-nocheck — standalone script, not part of the Next.js build
 /**
  * Nextiva CSV Scraper
  *

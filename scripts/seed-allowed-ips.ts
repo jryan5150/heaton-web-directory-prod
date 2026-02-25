@@ -1,3 +1,4 @@
+// @ts-nocheck — standalone script, not part of the Next.js build
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
