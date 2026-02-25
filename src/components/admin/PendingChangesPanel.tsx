@@ -21,11 +21,16 @@ export default function PendingChangesPanel({ pendingChanges, onDataChange, user
 
   const handleApprove = async (changeId: string) => {
     try {
-      await fetch('/api/admin/pending', {
+      const response = await fetch('/api/admin/pending', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: changeId, status: 'approved' })
       })
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        alert(data.error || `Failed to approve change (${response.status})`)
+        return
+      }
       onDataChange()
     } catch (error) {
       alert('Error approving change')
@@ -34,11 +39,16 @@ export default function PendingChangesPanel({ pendingChanges, onDataChange, user
 
   const handleReject = async (changeId: string) => {
     try {
-      await fetch('/api/admin/pending', {
+      const response = await fetch('/api/admin/pending', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: changeId, status: 'rejected' })
       })
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        alert(data.error || `Failed to reject change (${response.status})`)
+        return
+      }
       onDataChange()
     } catch (error) {
       alert('Error rejecting change')

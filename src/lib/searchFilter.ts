@@ -180,7 +180,8 @@ export function highlightSearchTerm(searchTerm: string, employeeCardsSelector: s
       }
 
       // Create highlighted version
-      const regex = new RegExp(`(${searchTerm})`, 'gi');
+      const escaped = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const regex = new RegExp(`(${escaped})`, 'gi');
       const highlightedText = originalText.replace(
         regex,
         '<mark style="background-color: var(--accent-color-light); padding: 2px 4px; border-radius: 3px;">$1</mark>'

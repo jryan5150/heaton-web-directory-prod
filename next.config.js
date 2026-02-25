@@ -1,16 +1,22 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Enable static export for Electron
-  output: process.env.BUILD_ELECTRON ? 'export' : undefined,
-
-  // Disable image optimization for Electron builds
   images: {
-    unoptimized: process.env.BUILD_ELECTRON ? true : false,
+    unoptimized: false,
   },
 
-  // Base path for Electron
-  basePath: process.env.BUILD_ELECTRON ? '' : undefined,
-  assetPrefix: process.env.BUILD_ELECTRON ? '' : undefined,
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+        ],
+      },
+    ]
+  },
 }
 
 module.exports = nextConfig

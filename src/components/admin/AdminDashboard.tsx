@@ -22,25 +22,18 @@ export default function AdminDashboard() {
   const isSuperAdmin = userRole === 'superadmin'
 
   useEffect(() => {
-    loadUserInfo()
-    loadData()
-  }, [])
-
-  const loadUserInfo = async () => {
-    try {
+    const init = async () => {
       const response = await fetch('/api/admin/session')
       if (response.ok) {
         const userData = await response.json()
         setCurrentUser(userData)
+        await loadData()
       } else {
-        // User not authenticated
         router.push('/admin/login')
       }
-    } catch (error) {
-      console.error('Error loading user info:', error)
-      router.push('/admin/login')
     }
-  }
+    init().catch(() => router.push('/admin/login'))
+  }, [])
 
   const loadData = async () => {
     setLoading(true)
@@ -53,8 +46,8 @@ export default function AdminDashboard() {
       const employeesData = await employeesRes.json()
       const pendingData = await pendingRes.json()
 
-      setEmployees(employeesData)
-      setPendingChanges(pendingData)
+      if (Array.isArray(employeesData)) setEmployees(employeesData)
+      if (Array.isArray(pendingData)) setPendingChanges(pendingData)
     } catch (error) {
       console.error('Error loading data:', error)
     } finally {

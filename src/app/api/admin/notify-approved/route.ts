@@ -1,9 +1,16 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/db'
 import { Resend } from 'resend'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // Verify cron secret for Vercel cron jobs, or reject unauthenticated calls
+    const authHeader = request.headers.get('authorization')
+    const cronSecret = process.env.CRON_SECRET
+    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const resend = new Resend(process.env.RESEND_API_KEY)
     // Read approved changes from database
     const approvedChanges = await prisma.pendingChange.findMany({

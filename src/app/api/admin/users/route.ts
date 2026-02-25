@@ -25,7 +25,6 @@ export async function GET() {
       email: u.email,
       name: u.name,
       role: u.role,
-      passwordHash: u.passwordHash,
       addedAt: u.addedAt.toISOString(),
       addedBy: u.addedBy
     }))
@@ -90,7 +89,6 @@ export async function POST(request: NextRequest) {
         email: newUser.email,
         name: newUser.name,
         role: newUser.role,
-        passwordHash: newUser.passwordHash,
         addedAt: newUser.addedAt.toISOString(),
         addedBy: newUser.addedBy
       }

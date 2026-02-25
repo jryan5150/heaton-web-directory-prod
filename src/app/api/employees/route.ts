@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAllEmployees, addEmployee, saveEmployees } from '@/lib/database'
+import { getSessionFromCookie } from '@/lib/auth-helpers'
 
 export async function GET() {
   try {
@@ -12,6 +13,11 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const user = await getSessionFromCookie()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const body = await request.json()
     const newEmployee = await addEmployee(body)
 
@@ -23,6 +29,11 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    const user = await getSessionFromCookie()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const employees = await request.json()
     await saveEmployees(employees)
 

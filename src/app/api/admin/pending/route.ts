@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/db'
+import { getSessionFromCookie, canApprove } from '@/lib/auth-helpers'
 import { PendingChange } from '@/types/admin'
 import { Employee } from '@/types/employee'
 
@@ -35,6 +36,11 @@ function mapToPendingChange(dbChange: {
 // GET - Get all pending changes
 export async function GET() {
   try {
+    const user = await getSessionFromCookie()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const changes = await prisma.pendingChange.findMany({
       orderBy: { proposedAt: 'desc' }
     })
@@ -48,11 +54,16 @@ export async function GET() {
 // POST - Create new pending change
 export async function POST(request: NextRequest) {
   try {
+    const user = await getSessionFromCookie()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const change: PendingChange = await request.json()
 
     const newChange = await prisma.pendingChange.create({
       data: {
-        id: change.id || `change-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: `change-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         type: change.type,
         employeeId: change.employeeId || null,
         beforeData: change.before ? (change.before as object) : undefined,
@@ -76,7 +87,19 @@ export async function POST(request: NextRequest) {
 // PATCH - Update pending change status
 export async function PATCH(request: NextRequest) {
   try {
+    const user = await getSessionFromCookie()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    if (!canApprove(user)) {
+      return NextResponse.json({ error: 'Forbidden - Approver or Super Admin only' }, { status: 403 })
+    }
+
     const { id, status, notes, approvedBy, approvedAt } = await request.json()
+
+    if (!id) {
+      return NextResponse.json({ error: 'ID required' }, { status: 400 })
+    }
 
     const updatedChange = await prisma.pendingChange.update({
       where: { id },
@@ -98,6 +121,11 @@ export async function PATCH(request: NextRequest) {
 // DELETE - Delete pending change
 export async function DELETE(request: NextRequest) {
   try {
+    const user = await getSessionFromCookie()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
 

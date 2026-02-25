@@ -64,70 +64,72 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Apply changes to database
-    for (const change of approvedChanges) {
-      const afterData = change.afterData as Employee | null
+    // Apply all changes atomically in a single transaction
+    await prisma.$transaction(async (tx) => {
+      for (const change of approvedChanges) {
+        const afterData = change.afterData as Employee | null
 
-      switch (change.type) {
-        case 'add':
-          if (afterData) {
-            await prisma.employee.create({
-              data: {
-                id: afterData.id,
-                firstName: afterData.firstName,
-                lastName: afterData.lastName,
-                email: afterData.email || null,
-                extension: afterData.extension || null,
-                phoneNumber: afterData.phoneNumber || null,
-                did: afterData.did || null,
-                location: afterData.location,
-                team: afterData.team || '',
-                title: afterData.title || null,
-                jobTitle: afterData.jobTitle || null,
-                department: afterData.department || null,
-                photoUrl: afterData.photoUrl || null,
-                avatarUrl: afterData.avatarUrl || null,
-              }
-            })
-          }
-          break
+        switch (change.type) {
+          case 'add':
+            if (afterData) {
+              await tx.employee.create({
+                data: {
+                  id: afterData.id,
+                  firstName: afterData.firstName,
+                  lastName: afterData.lastName,
+                  email: afterData.email || null,
+                  extension: afterData.extension || null,
+                  phoneNumber: afterData.phoneNumber || null,
+                  did: afterData.did || null,
+                  location: afterData.location,
+                  team: afterData.team || '',
+                  title: afterData.title || null,
+                  jobTitle: afterData.jobTitle || null,
+                  department: afterData.department || null,
+                  photoUrl: afterData.photoUrl || null,
+                  avatarUrl: afterData.avatarUrl || null,
+                }
+              })
+            }
+            break
 
-        case 'edit':
-          if (change.employeeId && afterData) {
-            await prisma.employee.update({
-              where: { id: change.employeeId },
-              data: {
-                firstName: afterData.firstName,
-                lastName: afterData.lastName,
-                email: afterData.email || null,
-                extension: afterData.extension || null,
-                phoneNumber: afterData.phoneNumber || null,
-                did: afterData.did || null,
-                location: afterData.location,
-                team: afterData.team || '',
-                title: afterData.title || null,
-                jobTitle: afterData.jobTitle || null,
-                department: afterData.department || null,
-                photoUrl: afterData.photoUrl || null,
-                avatarUrl: afterData.avatarUrl || null,
-              }
-            })
-          }
-          break
+          case 'edit':
+            if (change.employeeId && afterData) {
+              await tx.employee.update({
+                where: { id: change.employeeId },
+                data: {
+                  firstName: afterData.firstName,
+                  lastName: afterData.lastName,
+                  email: afterData.email || null,
+                  extension: afterData.extension || null,
+                  phoneNumber: afterData.phoneNumber || null,
+                  did: afterData.did || null,
+                  location: afterData.location,
+                  team: afterData.team || '',
+                  title: afterData.title || null,
+                  jobTitle: afterData.jobTitle || null,
+                  department: afterData.department || null,
+                  photoUrl: afterData.photoUrl || null,
+                  avatarUrl: afterData.avatarUrl || null,
+                }
+              })
+            }
+            break
 
-        case 'delete':
-          if (change.employeeId) {
-            await prisma.employee.delete({
-              where: { id: change.employeeId }
-            })
-          }
-          break
+          case 'delete':
+            if (change.employeeId) {
+              await tx.employee.delete({
+                where: { id: change.employeeId }
+              })
+            }
+            break
+        }
       }
-    }
 
-    // Remove approved changes from pending
-    await prisma.pendingChange.deleteMany({
-      where: { status: 'approved' }
+      // Remove approved changes from pending (inside same transaction)
+      await tx.pendingChange.deleteMany({
+        where: { status: 'approved' }
+      })
     })
 
     // Get updated employee count

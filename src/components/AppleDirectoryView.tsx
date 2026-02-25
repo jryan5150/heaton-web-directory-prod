@@ -44,10 +44,11 @@ export default function AppleDirectoryView({ employees }: AppleDirectoryViewProp
 
     const grouped: Record<string, Employee[]> = {}
     searchFiltered.forEach(emp => {
-      if (!grouped[emp.location]) {
-        grouped[emp.location] = []
+      const locationKey = emp.location || 'Unknown'
+      if (!grouped[locationKey]) {
+        grouped[locationKey] = []
       }
-      grouped[emp.location].push(emp)
+      grouped[locationKey].push(emp)
     })
 
     Object.keys(grouped).forEach(location => {
@@ -116,6 +117,7 @@ export default function AppleDirectoryView({ employees }: AppleDirectoryViewProp
                 type="text"
                 className="heaton-search-input"
                 placeholder="Search employees..."
+                aria-label="Search employees"
                 autoComplete="off"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}

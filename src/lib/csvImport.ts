@@ -255,11 +255,12 @@ export function convertToEmployees(nextiveUsers: NextivaUser[]): Employee[] {
     firstName: user.firstName,
     lastName: user.lastName || '', // Default to empty string if no lastName
     email: user.email,
-    extensionNumber: user.extensionNumber,
+    extension: user.extensionNumber,
     did: user.did,
     team: user.team || 'Unassigned',
     location: user.location || 'Unknown',
     department: user.department,
+    title: user.jobTitle,
     jobTitle: user.jobTitle
   }))
 }

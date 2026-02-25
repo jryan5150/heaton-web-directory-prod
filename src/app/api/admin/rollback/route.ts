@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     // Get employees from the version snapshot
     const snapshotEmployees = version.snapshot as unknown as Employee[]
 
-    // Replace all employees with snapshot data using transaction
+    // Replace all employees with snapshot data and clear stale approved changes
     await prisma.$transaction([
       prisma.employee.deleteMany(),
       ...snapshotEmployees.map(emp => prisma.employee.create({
@@ -87,7 +87,11 @@ export async function POST(request: NextRequest) {
           photoUrl: emp.photoUrl || null,
           avatarUrl: emp.avatarUrl || null,
         }
-      }))
+      })),
+      // Clear approved changes that would re-apply the rolled-back state
+      prisma.pendingChange.deleteMany({
+        where: { status: 'approved' }
+      })
     ])
 
     return NextResponse.json({

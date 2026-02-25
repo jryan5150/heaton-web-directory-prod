@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getEmployeeById, updateEmployee, deleteEmployee } from '@/lib/database'
+import { getSessionFromCookie } from '@/lib/auth-helpers'
 
 type RouteContext = {
   params: Promise<{ id: string }>
@@ -28,6 +29,11 @@ export async function PATCH(
   context: RouteContext
 ) {
   try {
+    const user = await getSessionFromCookie()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const params = await context.params
     const body = await request.json()
     const employee = await updateEmployee(params.id, body)
@@ -47,6 +53,11 @@ export async function DELETE(
   context: RouteContext
 ) {
   try {
+    const user = await getSessionFromCookie()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const params = await context.params
     const success = await deleteEmployee(params.id)
 

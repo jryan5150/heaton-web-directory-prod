@@ -32,7 +32,7 @@ export default function EmployeeManagement({ employees, onDataChange }: Employee
       emp.firstName.toLowerCase().includes(search) ||
       emp.lastName.toLowerCase().includes(search) ||
       emp.email?.toLowerCase().includes(search) ||
-      emp.location.toLowerCase().includes(search)
+      emp.location?.toLowerCase().includes(search)
     )
   })
 
@@ -55,11 +55,16 @@ export default function EmployeeManagement({ employees, onDataChange }: Employee
     }
 
     try {
-      await fetch('/api/admin/pending', {
+      const response = await fetch('/api/admin/pending', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(change)
       })
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        alert(data.error || `Failed to submit change (${response.status})`)
+        return
+      }
 
       setEditingEmployee(null)
       onDataChange()
@@ -83,11 +88,16 @@ export default function EmployeeManagement({ employees, onDataChange }: Employee
     }
 
     try {
-      await fetch('/api/admin/pending', {
+      const response = await fetch('/api/admin/pending', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(change)
       })
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        alert(data.error || `Failed to submit deletion (${response.status})`)
+        return
+      }
 
       onDataChange()
       alert('Deletion submitted for approval!')
@@ -128,11 +138,16 @@ export default function EmployeeManagement({ employees, onDataChange }: Employee
     }
 
     try {
-      await fetch('/api/admin/pending', {
+      const response = await fetch('/api/admin/pending', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(change)
       })
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        alert(data.error || `Failed to submit new employee (${response.status})`)
+        return
+      }
 
       // Reset form and close modal
       setNewEmployee({

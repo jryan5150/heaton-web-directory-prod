@@ -40,7 +40,7 @@ export default function ExportMenu({ employees, selectedLocation }: ExportMenuPr
         emp.location || '',
         emp.department || '',
         emp.title || ''
-      ].map(field => `"${field}"`).join(','))
+      ].map(field => `"${String(field).replace(/"/g, '""')}"`).join(','))
     ].join('\n')
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })

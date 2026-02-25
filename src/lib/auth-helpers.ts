@@ -4,9 +4,13 @@ import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { UserRole } from '@/types/admin'
 
-const SESSION_SECRET = new TextEncoder().encode(
-  process.env.SESSION_SECRET || 'your-secret-key-change-in-production'
-)
+function getSessionSecret(): Uint8Array {
+  const raw = process.env.SESSION_SECRET
+  if (!raw) {
+    throw new Error('SESSION_SECRET environment variable is required. Set it in Vercel environment variables.')
+  }
+  return new TextEncoder().encode(raw)
+}
 const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000 // 7 days
 
 export interface SessionUser {
@@ -31,14 +35,14 @@ export async function createSession(user: SessionUser): Promise<string> {
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('7d')
-    .sign(SESSION_SECRET)
+    .sign(getSessionSecret())
 
   return token
 }
 
 export async function verifySession(token: string): Promise<SessionUser | null> {
   try {
-    const verified = await jwtVerify(token, SESSION_SECRET)
+    const verified = await jwtVerify(token, getSessionSecret())
     return verified.payload.user as SessionUser
   } catch (error) {
     return null

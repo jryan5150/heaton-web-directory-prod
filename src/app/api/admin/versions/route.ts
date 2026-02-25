@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/db'
+import { getSessionFromCookie } from '@/lib/auth-helpers'
 
 // GET - Get all version history
 export async function GET() {
   try {
+    const user = await getSessionFromCookie()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const versions = await prisma.version.findMany({
       orderBy: { timestamp: 'desc' },
       select: {
