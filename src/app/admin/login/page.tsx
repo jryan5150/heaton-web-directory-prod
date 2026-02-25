@@ -1,15 +1,72 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { signIn } from 'next-auth/react'
 import Link from 'next/link'
 
+/** Map next-auth/callback error codes to user-friendly messages */
+function getErrorMessage(code: string | null): string {
+  switch (code) {
+    case 'AccessDenied':
+      return 'Access denied. Your Microsoft account is not registered as an admin.'
+    case 'NoSession':
+      return 'Microsoft sign-in session expired. Please try again.'
+    case 'NotRegistered':
+      return 'Your account is not registered as an admin. Contact your administrator.'
+    case 'CallbackError':
+      return 'Something went wrong during sign-in. Please try again.'
+    case 'OAuthSignin':
+    case 'OAuthCallback':
+      return 'Microsoft sign-in failed. Please try again.'
+    default:
+      return code ? 'Sign-in failed. Please try again.' : ''
+  }
+}
+
+/**
+ * Wrapper component to provide Suspense boundary for useSearchParams.
+ * Next.js 15 requires this for client components that read search params.
+ */
 export default function AdminLoginPage() {
+  return (
+    <Suspense fallback={
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #0a1f38 0%, #0f2b4c 50%, #163d6b 100%)',
+      }}>
+        <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px' }}>Loading...</div>
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
+  )
+}
+
+function LoginContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+  const [error, setError] = useState(() => getErrorMessage(searchParams.get('error')))
   const [loading, setLoading] = useState(false)
+  const [msLoading, setMsLoading] = useState(false)
+
+  const handleMicrosoftSignIn = async () => {
+    setError('')
+    setMsLoading(true)
+    try {
+      await signIn('azure-ad', {
+        callbackUrl: '/api/admin/microsoft-callback',
+      })
+    } catch {
+      setError('Failed to initiate Microsoft sign-in.')
+      setMsLoading(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,6 +94,8 @@ export default function AdminLoginPage() {
       setLoading(false)
     }
   }
+
+  const isLoading = loading || msLoading
 
   return (
     <div style={{
@@ -120,6 +179,66 @@ export default function AdminLoginPage() {
             </div>
           )}
 
+          {/* Microsoft SSO Button (Primary) */}
+          <button
+            type="button"
+            onClick={handleMicrosoftSignIn}
+            disabled={isLoading}
+            style={{
+              width: '100%',
+              padding: '11px 16px',
+              background: msLoading ? '#f3f4f6' : '#ffffff',
+              color: '#3c4043',
+              border: '1px solid #dadce0',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '12px',
+              transition: 'background 0.2s ease, box-shadow 0.2s ease',
+              opacity: isLoading ? 0.7 : 1,
+            }}
+            onMouseEnter={(e) => {
+              if (!isLoading) {
+                e.currentTarget.style.background = '#f8f9fa'
+                e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.08)'
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isLoading) {
+                e.currentTarget.style.background = '#ffffff'
+                e.currentTarget.style.boxShadow = 'none'
+              }
+            }}
+          >
+            {/* Microsoft Logo SVG (official 4-square logo) */}
+            <svg width="20" height="20" viewBox="0 0 21 21" fill="none">
+              <rect x="1" y="1" width="9" height="9" fill="#F25022" />
+              <rect x="11" y="1" width="9" height="9" fill="#7FBA00" />
+              <rect x="1" y="11" width="9" height="9" fill="#00A4EF" />
+              <rect x="11" y="11" width="9" height="9" fill="#FFB900" />
+            </svg>
+            {msLoading ? 'Redirecting to Microsoft...' : 'Sign in with Microsoft'}
+          </button>
+
+          {/* Divider */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            margin: '24px 0',
+            gap: '12px',
+          }}>
+            <div style={{ flex: 1, height: '1px', background: 'var(--gray-200)' }} />
+            <span style={{ fontSize: '12px', color: 'var(--gray-400)', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              or sign in with email
+            </span>
+            <div style={{ flex: 1, height: '1px', background: 'var(--gray-200)' }} />
+          </div>
+
+          {/* Email/Password Form (Fallback) */}
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '16px' }}>
               <label style={{
@@ -136,7 +255,7 @@ export default function AdminLoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                disabled={loading}
+                disabled={isLoading}
                 style={{
                   width: '100%',
                   padding: '10px 14px',
@@ -174,7 +293,7 @@ export default function AdminLoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                disabled={loading}
+                disabled={isLoading}
                 style={{
                   width: '100%',
                   padding: '10px 14px',
@@ -199,17 +318,17 @@ export default function AdminLoginPage() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={isLoading}
               style={{
                 width: '100%',
                 padding: '12px',
-                background: loading ? 'var(--gray-300)' : 'linear-gradient(135deg, var(--heaton-navy) 0%, #163d6b 100%)',
+                background: isLoading ? 'var(--gray-300)' : 'linear-gradient(135deg, var(--heaton-navy) 0%, #163d6b 100%)',
                 color: 'white',
                 border: 'none',
                 borderRadius: '9999px',
                 fontSize: '14px',
                 fontWeight: '600',
-                cursor: loading ? 'not-allowed' : 'pointer',
+                cursor: isLoading ? 'not-allowed' : 'pointer',
                 letterSpacing: '0.02em',
                 textTransform: 'uppercase',
                 transition: 'all 0.2s ease'

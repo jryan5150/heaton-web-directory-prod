@@ -39,12 +39,53 @@ model User {
   id           String   @id @default(cuid())
   email        String   @unique
   name         String
-  passwordHash String
+  passwordHash String?  // Null for SSO-only users
   role         String   // superadmin, approver, editor
+  microsoftId  String?  @unique // Entra ID Object ID for SSO
   addedAt      DateTime @default(now())
   addedBy      String
 
   @@index([email])
+}
+
+// Allowed IP addresses for directory access
+model AllowedIP {
+  id        String   @id @default(cuid())
+  ip        String
+  location  String   // Office name (e.g., "Tyler", "Athens")
+  notes     String?
+  addedBy   String
+  addedAt   DateTime @default(now())
+
+  @@unique([ip])
+  @@index([ip])
+}
+
+// Manual mapping overrides for Nextiva sync
+model SyncMapping {
+  id            String   @id @default(cuid())
+  nextivaEmail  String   @unique  // Email in Nextiva CSV
+  employeeId    String   // Maps to Employee.id in directory
+  addedBy       String
+  addedAt       DateTime @default(now())
+  notes         String?
+}
+
+// Sync operation log
+model SyncLog {
+  id            String   @id @default(cuid())
+  timestamp     DateTime @default(now())
+  source        String   // "manual" or "automated"
+  totalRows     Int
+  matched       Int
+  created       Int      // New pending changes created
+  updated       Int      // Auto-updated employees
+  skipped       Int      // Non-person entries filtered
+  errors        Int
+  details       Json?    // Detailed breakdown
+  triggeredBy   String   // User or "github-actions"
+
+  @@index([timestamp])
 }
 
 // Pending changes for approval workflow

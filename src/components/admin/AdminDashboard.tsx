@@ -8,11 +8,13 @@ import EmployeeManagement from './EmployeeManagement'
 import PendingChangesPanel from './PendingChangesPanel'
 import VersionHistoryPanel from './VersionHistoryPanel'
 import UserManagement from './UserManagement'
+import NextivaSyncPanel from './NextivaSyncPanel'
+import IPManagementPanel from './IPManagementPanel'
 import { ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline'
 
 export default function AdminDashboard() {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'employees' | 'pending' | 'versions' | 'users'>('employees')
+  const [activeTab, setActiveTab] = useState<'employees' | 'pending' | 'versions' | 'sync' | 'ips' | 'users'>('employees')
   const [employees, setEmployees] = useState<Employee[]>([])
   const [pendingChanges, setPendingChanges] = useState<PendingChange[]>([])
   const [loading, setLoading] = useState(true)
@@ -202,6 +204,42 @@ export default function AdminDashboard() {
               Version History
             </button>
 
+            <button
+              onClick={() => setActiveTab('sync')}
+              style={{
+                padding: '12px 20px',
+                border: 'none',
+                background: 'none',
+                cursor: 'pointer',
+                fontSize: '15px',
+                fontWeight: activeTab === 'sync' ? '600' : '500',
+                color: activeTab === 'sync' ? 'var(--accent-color)' : 'var(--secondary-text-color)',
+                borderBottom: activeTab === 'sync' ? '3px solid var(--accent-color)' : '3px solid transparent',
+                marginBottom: '-1px'
+              }}
+            >
+              Nextiva Sync
+            </button>
+
+            {isSuperAdmin && (
+              <button
+                onClick={() => setActiveTab('ips')}
+                style={{
+                  padding: '12px 20px',
+                  border: 'none',
+                  background: 'none',
+                  cursor: 'pointer',
+                  fontSize: '15px',
+                  fontWeight: activeTab === 'ips' ? '600' : '500',
+                  color: activeTab === 'ips' ? 'var(--accent-color)' : 'var(--secondary-text-color)',
+                  borderBottom: activeTab === 'ips' ? '3px solid var(--accent-color)' : '3px solid transparent',
+                  marginBottom: '-1px'
+                }}
+              >
+                IP Allow List
+              </button>
+            )}
+
             {isSuperAdmin && (
               <button
                 onClick={() => setActiveTab('users')}
@@ -254,6 +292,18 @@ export default function AdminDashboard() {
                 onDataChange={loadData}
                 userRole={userRole}
               />
+            )}
+
+            {activeTab === 'sync' && (
+              <NextivaSyncPanel
+                userRole={userRole}
+                employees={employees}
+                onDataChange={loadData}
+              />
+            )}
+
+            {activeTab === 'ips' && (
+              <IPManagementPanel userRole={userRole} />
             )}
 
             {activeTab === 'users' && (

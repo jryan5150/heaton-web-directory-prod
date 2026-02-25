@@ -1,22 +1,29 @@
 # Heaton Eye Admin Portal - Quick Reference Guide
 
-**Portal URL:** https://staff.heatoneye.com/admin
+**Version 2.0** | **Portal URL:** https://staff.heatoneye.com/admin
+
+---
+
+## Signing In
+
+**Microsoft Sign-In (Recommended):** Click "Sign in with Microsoft" and use your @heatoneye.com account.
+
+**Email & Password (Fallback):** Enter your email and password in the form below the Microsoft button.
 
 ---
 
 ## User Roles
 
+### Super Admin (Full Access)
+- Publish changes, manage users, manage IP allow list, manage sync mappings
+
 ### Approver (Review & Approve)
 - Can approve or reject pending changes
-- Cannot publish changes to live site
-- Cannot manage user accounts
+- Cannot publish, manage users, or manage IPs
 
 ### Editor (Submit Changes)
 - Can submit new employees, edits, and deletions
-- Cannot approve or reject changes
 - All submissions require approval
-
-**Note:** Login credentials are provided separately by your administrator.
 
 ---
 
@@ -27,7 +34,10 @@
 | View Employees            |      ✅     |    ✅    |   ✅   |
 | Submit Changes            |      ✅     |    ✅    |   ✅   |
 | Approve/Reject Changes    |      ✅     |    ✅    |   ❌   |
+| Upload Nextiva CSV        |      ✅     |    ✅    |   ✅   |
 | Publish Changes           |      ✅     |    ❌    |   ❌   |
+| Manage IP Allow List      |      ✅     |    ❌    |   ❌   |
+| Manage Sync Mappings      |      ✅     |    ❌    |   ❌   |
 | Rollback Versions         |      ✅     |    ❌    |   ❌   |
 | Manage Users              |      ✅     |    ❌    |   ❌   |
 
@@ -42,46 +52,52 @@
 
 ---
 
+## Nextiva Sync
+
+**Upload CSV:** Nextiva Sync tab → Choose File → Upload & Sync
+
+The sync engine automatically:
+- Matches employees by email, manual mapping, or name
+- Updates extensions, phone numbers, and locations
+- Filters out rooms, devices, and fax lines
+- Queues unmatched people for review in Pending Changes
+
+**Automated:** A daily sync runs on weekday mornings automatically.
+
+**Manual Mappings (Super Admin):** When emails don't match, add a manual mapping:
+Nextiva Sync tab → Manual Email Mappings → Add Mapping
+
+---
+
+## IP Allow List (Super Admin)
+
+The public directory is restricted to office networks. Manage allowed IPs:
+
+**View:** IP Allow List tab → IPs grouped by location
+
+**Add:** IP Allow List tab → Add IP → Enter address and location
+
+**Remove:** Click red trash icon → Confirm removal
+
+---
+
 ## Common Tasks
 
 ### For Editors
 
 **Submit New Employee**
-**Employees Tab** → **Add New Employee** → **Fill Form** → **Submit**
+Employees Tab → Add New Employee → Fill Form → Submit
 
 **Edit Employee**
-**Employees Tab** → **Find Employee** → **Edit** → **Submit**
-
-**Delete Employee**
-**Employees Tab** → **Find Employee** → **Delete** → **Confirm**
+Employees Tab → Find Employee → Edit → Submit
 
 ### For Approvers
 
-**Approve Single Change**
-**Pending Changes Tab** → **Review** → **Click Approve**
+**Approve/Reject Change**
+Pending Changes Tab → Review → Click Approve or Reject
 
-**Bulk Approve Changes**
-**Pending Changes** → **Check boxes** → **Approve Selected**
-
-**Reject Change**
-**Pending Changes Tab** → **Review** → **Click Reject**
-
-### Administrative Functions
-*(Super Admin only - contact administrator if needed)*
-
-- Publish approved changes to live directory
-- Rollback to previous versions
-- Manage user accounts and permissions
-
----
-
-## Email Notifications
-
-**Who:** Currently sent to Super Admin only (interim solution)
-**When:** Daily at 9:00 AM UTC (3:00 AM CST / 4:00 AM CDT)
-**Why:** Notifies when approved changes are ready to publish
-**What:** Count of changes + breakdown by type + portal link
-**Future:** Workflow will eventually move to fully automated publishing
+**Bulk Approve**
+Pending Changes → Check boxes → Approve Selected
 
 ---
 
@@ -89,25 +105,27 @@
 
 | Badge | Type | Description |
 |-------|------|-------------|
-| 🟢 | ADD | New employee being added to directory |
-| 🔵 | EDIT | Existing employee information being updated |
-| 🔴 | DELETE | Employee being removed from directory |
+| ADD | New employee being added to directory |
+| EDIT | Existing employee information being updated |
+| DELETE | Employee being removed from directory |
 
 ---
 
 ## Troubleshooting Quick Fixes
 
-### Can't log in?
-→ Verify email/password exactly (case-sensitive)
+### Microsoft sign-in says "Access denied"?
+→ Your account must be pre-registered by a Super Admin
 
-### Don't see approve button?
-→ Editors can't approve (only submit)
+### Can't log in with email/password?
+→ Verify credentials. If SSO-only, use Microsoft button
 
-### Don't see publish button?
-→ Only Super Admin can publish
+### Directory shows "Access Restricted"?
+→ You must be on an approved office network
+→ Admin portal works from anywhere: staff.heatoneye.com/admin
 
-### Don't see Users tab?
-→ Only Super Admin has user management access
+### Nextiva sync has unmatched records?
+→ Check Pending Changes tab for queued reviews
+→ Super Admin can add manual email mappings
 
 ### Changes not on live site?
 → Must be published, not just approved
@@ -127,20 +145,18 @@
 
 ## Security Reminders
 
-- ✓ Change default passwords after first login
-- ✓ Log out when finished
-- ✓ Don't share credentials
-- ✓ Sessions expire after 7 days
-- ✓ Double-check data before submitting
+- Use Microsoft sign-in when possible (more secure)
+- Log out when finished
+- Don't share credentials
+- Sessions expire after 7 days
+- Double-check data before submitting
 
 ---
 
 ## Support
 
-📧 **Email:** tickets@heatoneye.com
-
-For technical support or questions about the admin portal, contact the support team.
+**Email:** tickets@heatoneye.com
 
 ---
 
-**Quick Reference Guide v1.0**
+**Quick Reference Guide v2.0**

@@ -30,6 +30,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // SSO-only users don't have a password -- they must use Microsoft sign-in
+    if (!user.passwordHash) {
+      return NextResponse.json(
+        { error: 'This account uses Microsoft sign-in. Please use the "Sign in with Microsoft" button.' },
+        { status: 401 }
+      )
+    }
+
     // Verify password
     const isValid = await verifyPassword(password, user.passwordHash)
 

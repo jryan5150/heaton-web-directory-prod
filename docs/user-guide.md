@@ -1,6 +1,6 @@
 # Heaton Eye Staff Directory - Admin Portal User Guide
 
-**Version 1.0** | Last Updated: November 2025
+**Version 2.0** | Last Updated: February 2025
 **Portal URL:** https://staff.heatoneye.com/admin
 
 ---
@@ -8,19 +8,24 @@
 ## Table of Contents
 
 1. [System Overview](#system-overview)
-2. [Role-Specific Instructions](#role-specific-instructions)
+2. [Signing In](#signing-in)
+3. [Role-Specific Instructions](#role-specific-instructions)
    - [Approver Guide](#approver-guide)
    - [Editor Guide](#editor-guide)
-3. [Approval Workflow](#approval-workflow)
-4. [Email Notifications](#email-notifications)
-5. [Troubleshooting](#troubleshooting)
-6. [Security Best Practices](#security-best-practices)
+4. [Approval Workflow](#approval-workflow)
+5. [Nextiva Sync](#nextiva-sync)
+6. [IP Allow List Management](#ip-allow-list-management)
+7. [Email Notifications](#email-notifications)
+8. [Troubleshooting](#troubleshooting)
+9. [Security Best Practices](#security-best-practices)
 
 ---
 
 ## System Overview
 
 The Heaton Eye Admin Portal manages the public employee directory at https://staff.heatoneye.com. Changes flow through a three-stage approval workflow to ensure accuracy.
+
+The public directory is restricted to office networks only — employees can access it from Athens, Tyler, Gun Barrel City, and Longview office locations. The admin portal is accessible from anywhere via Microsoft sign-in.
 
 ### Approval Workflow Diagram
 
@@ -38,12 +43,37 @@ EDITOR          APPROVER         SUPER ADMIN
 
 |                    | Super Admin | Approver | Editor |
 |--------------------|:-----------:|:--------:|:------:|
-| Employees Tab      |      ✅     |    ✅    |   ✅   |
+| Employees          |      ✅     |    ✅    |   ✅   |
 | Pending Changes    |      ✅     |    ✅    |   ✅   |
 | Version History    |      ✅     |    ✅    |   ✅   |
+| Nextiva Sync       |      ✅     |    ✅    |   ✅   |
+| IP Allow List      |      ✅     |    ❌    |   ❌   |
 | Users Management   |      ✅     |    ❌    |   ❌   |
 
-**Note:** SSO/OAuth integration is planned for future implementation to streamline the login process.
+---
+
+## Signing In
+
+The admin portal supports two sign-in methods:
+
+### Microsoft Sign-In (Recommended)
+
+1. Go to https://staff.heatoneye.com/admin/login
+2. Click **"Sign in with Microsoft"**
+3. You will be redirected to the Microsoft login page
+4. Sign in with your @heatoneye.com Microsoft 365 account
+5. You will be automatically redirected back to the admin portal
+
+**Note:** Only accounts that have been pre-registered in the admin portal can sign in. If you see "Access denied," contact your administrator.
+
+### Email & Password (Fallback)
+
+If Microsoft sign-in is unavailable:
+
+1. Go to https://staff.heatoneye.com/admin/login
+2. Scroll down to the "or sign in with email" section
+3. Enter your email and password
+4. Click **"Sign In"**
 
 ---
 
@@ -55,16 +85,13 @@ EDITOR          APPROVER         SUPER ADMIN
 
 **Review & Approve Only**
 
-#### Login Credentials
-- **Email:** m.balderas@heatoneye.com
-- **Password:** Balderas2025!
-
 #### What You Can Do
 - ✅ View all employees in the directory
 - ✅ Approve or reject pending changes
 - ✅ View version history
+- ✅ Upload Nextiva CSV files and view sync history
 - ❌ Cannot publish changes (Super Admin only)
-- ❌ Cannot manage users (Super Admin only)
+- ❌ Cannot manage users or IP allow list (Super Admin only)
 
 #### Common Tasks
 
@@ -98,16 +125,13 @@ EDITOR          APPROVER         SUPER ADMIN
 
 **Submit Changes Only**
 
-#### Login Credentials
-- **Email:** editor@internal
-- **Password:** HeatonEditor2025
-
 #### What You Can Do
 - ✅ View all employees in the directory
 - ✅ Submit new employee additions
 - ✅ Submit edits to existing employees
 - ✅ Submit employee removals
 - ✅ View pending changes you submitted
+- ✅ Upload Nextiva CSV files
 - ❌ Cannot approve or reject changes
 - ❌ Cannot publish changes
 - ❌ Cannot manage users
@@ -145,13 +169,6 @@ EDITOR          APPROVER         SUPER ADMIN
 4. Confirm deletion
 5. Deletion request goes to pending review
 
-**View Your Submissions**
-
-1. Click "Pending Changes" tab
-2. Your submissions appear with "Awaiting Approval" badge
-3. You cannot approve your own changes
-4. Wait for Approver or Super Admin to review
-
 ---
 
 ## Approval Workflow
@@ -179,22 +196,95 @@ EDITOR          APPROVER         SUPER ADMIN
 - Version snapshot created automatically
 - Published changes removed from pending list
 
-### Change Statuses
+---
 
-**🟡 Pending Review**
-- Waiting for Approver or Super Admin review
-- Editor sees "Awaiting Approval" badge
-- Approver sees approve/reject buttons
+## Nextiva Sync
 
-**🟢 Approved & Ready to Publish**
-- Change has been approved
-- Waiting for Super Admin to publish
-- Highlighted in green
+The **Nextiva Sync** tab allows you to keep the employee directory in sync with the Nextiva phone system. You can upload a CSV export from Nextiva, and the system will automatically update employee extensions, phone numbers, and locations.
 
-**🔴 Rejected**
-- Change was rejected during review
-- Will not be published
-- Displayed greyed out for record keeping
+### How It Works
+
+1. Export a Users CSV file from the Nextiva admin portal
+2. Upload the CSV using the **Nextiva Sync** tab
+3. The sync engine processes each row:
+   - **Matched employees** are auto-updated with new extension, phone, and location data
+   - **Unmatched real people** are queued as pending changes for admin review
+   - **Non-person entries** (rooms, devices, fax lines) are automatically filtered out
+
+### Uploading a CSV
+
+1. Click the **"Nextiva Sync"** tab
+2. Click **"Choose File"** and select the Nextiva CSV export
+3. Click **"Upload & Sync"**
+4. Review the results:
+   - **Matched**: Employees found in both systems
+   - **Updated**: Employees whose data was changed
+   - **Created**: New people queued for review
+   - **Skipped**: Non-person entries filtered out
+   - **Errors**: Rows that couldn't be processed
+
+5. Click the collapsible sections to see detailed breakdowns
+
+### Sync History
+
+Below the upload area, you'll see a history of the last 10 sync operations. Each entry shows:
+- When the sync ran
+- Whether it was manual (you uploaded) or automated (daily schedule)
+- How many rows were processed and the results
+
+### Automated Daily Sync
+
+A daily automated sync runs on weekday mornings. This scrapes the latest data from Nextiva and uploads it automatically. No action is needed from you — the sync history will show "AUTO" for these runs.
+
+### Manual Email Mappings (Super Admin Only)
+
+When the sync can't match a Nextiva record to an employee (e.g., because the email addresses differ), Super Admins can create manual mappings:
+
+1. In the "Manual Email Mappings" section, enter:
+   - **Nextiva Email**: The email address as it appears in the Nextiva CSV
+   - **Employee**: Select the correct employee from the dropdown
+   - **Notes**: (Optional) Why this mapping exists
+2. Click **"Add Mapping"**
+3. Future syncs will use this mapping automatically
+
+---
+
+## IP Allow List Management
+
+*(Super Admin Only)*
+
+The public directory at staff.heatoneye.com is restricted to specific office IP addresses. Only users on approved office networks can view the directory.
+
+### Viewing the IP Allow List
+
+1. Click the **"IP Allow List"** tab
+2. IPs are grouped by office location (Athens, Tyler, Gun Barrel City, Longview)
+3. Stats cards at the top show the count per location
+
+### Adding an IP Address
+
+1. Click **"Add IP"** button
+2. Enter the IPv4 address (e.g., 12.156.3.90)
+3. Select the office location from the dropdown, or click "Custom" to enter a new location
+4. Optionally add notes (e.g., "Main office router")
+5. Click **"Add IP Address"**
+
+### Removing an IP Address
+
+1. Find the IP you want to remove
+2. Click the red trash icon
+3. Confirm the removal
+
+**Warning:** Removing an IP will immediately block that network from accessing the public directory. Make sure you're not removing an IP that's still in use.
+
+### Current Office IPs
+
+| Location | IP Addresses |
+|----------|-------------|
+| Athens | 4.36.173.10, 66.76.57.122 |
+| Tyler | 12.156.3.90, 75.110.177.134 |
+| Gun Barrel City | 209.245.234.34, 209.33.56.59 |
+| Longview | 12.164.166.172, 206.255.14.253 |
 
 ---
 
@@ -202,7 +292,6 @@ EDITOR          APPROVER         SUPER ADMIN
 
 ### Who Receives Emails?
 - Currently, the Super Admin receives email notifications when approved changes are ready to be published
-- This is an interim solution - the workflow will eventually move to a fully automated publishing process
 
 ### When Are Emails Sent?
 - Daily at 9:00 AM UTC (3:00 AM CST / 4:00 AM CDT)
@@ -213,100 +302,92 @@ EDITOR          APPROVER         SUPER ADMIN
 - Count of approved changes waiting
 - Breakdown by type (Add, Edit, Delete)
 - Direct link to admin portal
-- Professional Heaton Eye branding
-
-### Sample Email Content
-
-```
-📋 Approved Changes Ready to Publish
-
-There are 3 approved employee directory
-changes waiting to be published:
-
-Change Summary:
-• Add: 1 employee
-• Edit: 2 employees
-
-[Review & Publish Changes] (button)
-```
 
 ---
 
 ## Troubleshooting
 
-### Can't log in / "Invalid credentials"
+### Microsoft sign-in says "Access denied"
 
 **Solution:**
-- ✓ Verify email address is correct (case-sensitive)
-- ✓ Verify password is exact (case-sensitive, includes special chars)
-- ✓ Try copying password directly from this guide
-- ✓ Contact support if password needs reset
+- Your Microsoft account must be pre-registered in the admin portal
+- Contact your Super Admin to add your account
+- Only @heatoneye.com accounts are supported
+
+### Can't log in with email/password
+
+**Solution:**
+- Verify email address is correct (case-sensitive)
+- Verify password is exact (case-sensitive, includes special chars)
+- If your account was set up for Microsoft sign-in only, you must use the "Sign in with Microsoft" button
+
+### Directory shows "Access Restricted" page
+
+**Solution:**
+- The public directory is restricted to office networks only
+- You must be on one of the approved office IPs
+- If you're in the office and still blocked, your office IP may have changed — contact your Super Admin
+- The admin portal is accessible from anywhere — use staff.heatoneye.com/admin
+
+### Nextiva sync shows unexpected results
+
+**Solution:**
+- Make sure you're uploading the correct CSV file (Users export from Nextiva)
+- The CSV must have a "Name" column
+- Non-person entries (rooms, devices, fax lines) are automatically filtered out
+- Unmatched people appear in the Pending Changes tab for review
 
 ### Don't see "Approve" button on pending changes
 
 **Solution:**
-- ✓ Check your role: Editors cannot approve changes
-- ✓ Editor role sees "Awaiting Approval" badge instead
-- ✓ Only Approvers and Super Admins can approve
+- Check your role: Editors cannot approve changes
+- Editor role sees "Awaiting Approval" badge instead
+- Only Approvers and Super Admins can approve
 
 ### Don't see "Publish" button
 
 **Solution:**
-- ✓ Only Super Admin can publish changes
-- ✓ Approvers will see message about waiting for Super Admin
-- ✓ This feature is restricted to Super Admin role only
+- Only Super Admin can publish changes
+- Approvers will see message about waiting for Super Admin
 
-### Don't see "Users" tab
+### Don't see "IP Allow List" or "Users" tabs
 
 **Solution:**
-- ✓ Only Super Admin has access to user management
-- ✓ Approvers and Editors cannot manage users
-- ✓ This is expected behavior for security
+- Only Super Admin has access to these management features
+- This is expected behavior for security
 
 ### Changes not appearing on public directory
 
 **Solution:**
-- ✓ Verify changes have been published (not just approved)
-- ✓ Check staff.heatoneye.com to confirm
-- ✓ Try hard refresh: Ctrl+F5 (Windows) or Cmd+Shift+R (Mac)
-- ✓ Allow 30 seconds for CDN cache to clear
-
-### Didn't receive email notification
-
-**Solution:**
-- ✓ Emails only sent if approved changes exist
-- ✓ Emails sent once per day at 9:00 AM UTC
-- ✓ Check spam/junk folder
-- ✓ Email notifications are currently sent to Super Admin only
-- ✓ Manually check portal instead of waiting for email
+- Verify changes have been published (not just approved)
+- Check staff.heatoneye.com to confirm
+- Try hard refresh: Ctrl+F5 (Windows) or Cmd+Shift+R (Mac)
+- Allow 30 seconds for cache to clear
 
 ---
 
 ## Security Best Practices
 
 ### Password Security
-- ✓ Change default passwords after first login
-- ✓ Use strong, unique passwords (12+ characters)
-- ✓ Include uppercase, lowercase, numbers, symbols
-- ✓ Don't share passwords between users
-- ✓ Store passwords in secure password manager
+- Change default passwords after first login
+- Use strong, unique passwords (12+ characters)
+- Prefer Microsoft sign-in over email/password for better security
 
 ### Account Security
-- ✓ Log out when finished using the portal
-- ✓ Don't share login credentials
-- ✓ Report suspicious activity immediately
-- ✓ Use private/incognito browser on shared computers
+- Log out when finished using the portal
+- Don't share login credentials
+- Report suspicious activity immediately
+- Use private/incognito browser on shared computers
 
 ### Session Management
-- ✓ Sessions expire after 7 days of inactivity
-- ✓ You'll need to log in again after expiration
-- ✓ This protects against unauthorized access
+- Sessions expire after 7 days of inactivity
+- You'll need to log in again after expiration
 
 ### Data Protection
-- ✓ Only submit accurate employee information
-- ✓ Double-check data before submitting
-- ✓ Don't submit personal/sensitive information beyond directory needs
-- ✓ Version history maintains audit trail
+- Only submit accurate employee information
+- Double-check data before submitting
+- Don't submit personal/sensitive information beyond directory needs
+- Version history maintains audit trail
 
 ---
 
@@ -314,7 +395,7 @@ Change Summary:
 
 For technical support or questions about the admin portal:
 
-📧 **Email:** tickets@heatoneye.com
+**Email:** tickets@heatoneye.com
 
 For Heaton Eye-specific questions, contact your internal IT department or authorized admin.
 

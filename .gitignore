@@ -40,6 +40,9 @@ Thumbs.db
 *.tmp
 *.temp
 
+# Playwright debug screenshots
+screenshots/
+
 # Prisma
 /src/generated/prisma
 
