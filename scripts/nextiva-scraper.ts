@@ -117,55 +117,64 @@ async function login(
       })
 
       log('Login page loaded, filling credentials...')
+      await takeScreenshot(page, `login-page-attempt-${attempt}`)
 
-      // Nextiva login form — wait for the email/username input
-      // The login form may use different selectors; try common patterns
-      const emailSelector = await page
+      // Nextiva login page uses a plain text input with placeholder
+      // "Username or Email" — NOT type="email". It's a two-step flow:
+      // Step 1: Enter username/email → click "Next"
+      // Step 2: Enter password → click "Sign in"
+      const usernameInput = await page
         .waitForSelector(
-          'input[type="email"], input[name="username"], input[name="email"], input#email, input#username',
+          [
+            'input[placeholder*="Username"]',
+            'input[placeholder*="Email"]',
+            'input[type="text"]',
+            'input[type="email"]',
+            'input[name="username"]',
+            'input[name="email"]',
+            'input#username',
+            'input#email',
+          ].join(', '),
           { timeout: LOGIN_TIMEOUT_MS }
         )
 
-      if (!emailSelector) {
-        throw new Error('Could not find email/username input field')
+      if (!usernameInput) {
+        throw new Error('Could not find username/email input field')
       }
 
-      await emailSelector.fill(username)
+      await usernameInput.fill(username)
       log('Username entered')
 
-      // Some login flows have a "Next" button before showing the password field
+      // Nextiva uses a two-step login: click "Next" to get to password
       const nextButton = await page.$(
-        'button[type="submit"], button:has-text("Next"), button:has-text("Continue")'
+        'button:has-text("Next"), button[type="submit"], button:has-text("Continue")'
       )
       if (nextButton) {
-        const passwordFieldVisible = await page.isVisible(
-          'input[type="password"]'
-        )
-        if (!passwordFieldVisible) {
-          log('Clicking Next/Continue to proceed to password step...')
-          await nextButton.click()
-          await page.waitForSelector('input[type="password"]', {
-            timeout: LOGIN_TIMEOUT_MS,
-          })
-        }
+        log('Clicking Next to proceed to password step...')
+        await nextButton.click()
+        // Wait for the password field to appear
+        await page.waitForSelector('input[type="password"]', {
+          timeout: LOGIN_TIMEOUT_MS,
+        })
+        log('Password field appeared')
       }
 
       // Fill password
-      const passwordSelector = await page.waitForSelector(
+      const passwordInput = await page.waitForSelector(
         'input[type="password"]',
         { timeout: LOGIN_TIMEOUT_MS }
       )
 
-      if (!passwordSelector) {
+      if (!passwordInput) {
         throw new Error('Could not find password input field')
       }
 
-      await passwordSelector.fill(password)
+      await passwordInput.fill(password)
       log('Password entered')
 
-      // Submit the login form
+      // Submit — look for "Sign in", "Sign In", "Log In", or submit button
       const submitButton = await page.$(
-        'button[type="submit"], button:has-text("Sign In"), button:has-text("Log In"), button:has-text("Login")'
+        'button:has-text("Sign in"), button:has-text("Sign In"), button:has-text("Log In"), button:has-text("Login"), button[type="submit"]'
       )
 
       if (submitButton) {
@@ -173,7 +182,7 @@ async function login(
         log('Login form submitted')
       } else {
         // Fallback: press Enter
-        await passwordSelector.press('Enter')
+        await passwordInput.press('Enter')
         log('Login form submitted via Enter key')
       }
 
