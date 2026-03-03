@@ -138,7 +138,7 @@ export default function VersionHistoryPanel({ onDataChange, userRole }: VersionH
             <div style={{
               padding: '32px',
               textAlign: 'center',
-              background: 'white',
+              background: 'var(--card-background)',
               borderRadius: 'var(--border-radius-large)',
               border: '1px solid var(--border-color)'
             }}>
@@ -162,7 +162,7 @@ export default function VersionHistoryPanel({ onDataChange, userRole }: VersionH
                 <div
                   key={version.id}
                   style={{
-                    background: 'white',
+                    background: 'var(--card-background)',
                     padding: '20px',
                     borderRadius: 'var(--border-radius-large)',
                     border: '1px solid var(--border-color)',
@@ -184,7 +184,7 @@ export default function VersionHistoryPanel({ onDataChange, userRole }: VersionH
                         disabled={rollingBack}
                         style={{
                           padding: '6px 12px',
-                          background: 'white',
+                          background: 'var(--card-background)',
                           color: 'var(--accent-color)',
                           border: '1px solid var(--accent-color)',
                           borderRadius: '6px',
@@ -259,7 +259,7 @@ export default function VersionHistoryPanel({ onDataChange, userRole }: VersionH
             <div style={{
               padding: '32px',
               textAlign: 'center',
-              background: 'white',
+              background: 'var(--card-background)',
               borderRadius: 'var(--border-radius-large)',
               border: '1px solid var(--border-color)'
             }}>
@@ -280,7 +280,7 @@ export default function VersionHistoryPanel({ onDataChange, userRole }: VersionH
                 <div
                   key={entry.id}
                   style={{
-                    background: 'white',
+                    background: 'var(--card-background)',
                     padding: '16px',
                     borderRadius: 'var(--border-radius-medium)',
                     border: '1px solid var(--border-color)',

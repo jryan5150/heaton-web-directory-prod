@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useLayoutEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Employee } from '@/types/employee'
 import { PendingChange, UserRole } from '@/types/admin'
@@ -10,7 +10,11 @@ import VersionHistoryPanel from './VersionHistoryPanel'
 import UserManagement from './UserManagement'
 import NextivaSyncPanel from './NextivaSyncPanel'
 import IPManagementPanel from './IPManagementPanel'
-import { ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline'
+import { ArrowRightOnRectangleIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outline'
+import '@/styles/apple-design-system.css'
+
+type AdminTheme = 'light' | 'dark'
+const THEME_KEY = 'heaton-admin-theme'
 
 export default function AdminDashboard() {
   const router = useRouter()
@@ -19,6 +23,23 @@ export default function AdminDashboard() {
   const [pendingChanges, setPendingChanges] = useState<PendingChange[]>([])
   const [loading, setLoading] = useState(true)
   const [currentUser, setCurrentUser] = useState<{ name: string; email: string; role: UserRole } | null>(null)
+  const [theme, setTheme] = useState<AdminTheme>('light')
+
+  // Initialize theme from localStorage before paint to prevent flash
+  useLayoutEffect(() => {
+    const saved = localStorage.getItem(THEME_KEY) as AdminTheme | null
+    if (saved === 'dark' || saved === 'light') {
+      setTheme(saved)
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      setTheme('dark')
+    }
+  }, [])
+
+  const toggleTheme = () => {
+    const next: AdminTheme = theme === 'light' ? 'dark' : 'light'
+    setTheme(next)
+    localStorage.setItem(THEME_KEY, next)
+  }
 
   const userRole = (currentUser?.role || 'approver') as UserRole
   const isSuperAdmin = userRole === 'superadmin'
@@ -61,10 +82,10 @@ export default function AdminDashboard() {
   const approvedCount = pendingChanges.filter(c => c.status === 'approved').length
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--background-color)' }}>
+    <div data-admin-theme={theme} style={{ minHeight: '100vh', background: 'var(--background-color)' }}>
       {/* Header */}
       <header style={{
-        background: 'white',
+        background: 'var(--card-background)',
         borderBottom: '1px solid var(--border-color)',
         padding: '16px 24px',
         position: 'sticky',
@@ -87,18 +108,38 @@ export default function AdminDashboard() {
             </p>
           </div>
 
-          {/* User Info & Sign Out */}
+          {/* User Info, Theme Toggle & Sign Out */}
           {currentUser && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--primary-text-color)' }}>
                   {currentUser.name}
                 </div>
                 <div style={{ fontSize: '12px', color: 'var(--secondary-text-color)' }}>
-                  {currentUser.role === 'superadmin' ? 'Super Admin' : 
+                  {currentUser.role === 'superadmin' ? 'Super Admin' :
                    currentUser.role === 'approver' ? 'Approver' : 'Editor'}
                 </div>
               </div>
+              <button
+                onClick={toggleTheme}
+                style={{
+                  padding: '8px',
+                  background: 'var(--card-background)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'var(--secondary-text-color)'
+                }}
+                title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {theme === 'dark'
+                  ? <SunIcon style={{ width: '18px', height: '18px' }} />
+                  : <MoonIcon style={{ width: '18px', height: '18px' }} />
+                }
+              </button>
               <button
                 onClick={async () => {
                   await fetch('/api/admin/logout', { method: 'POST' })
@@ -106,7 +147,7 @@ export default function AdminDashboard() {
                 }}
                 style={{
                   padding: '8px 12px',
-                  background: 'white',
+                  background: 'var(--card-background)',
                   border: '1px solid var(--border-color)',
                   borderRadius: '6px',
                   cursor: 'pointer',
@@ -129,7 +170,7 @@ export default function AdminDashboard() {
 
       {/* Tabs */}
       <div style={{
-        background: 'white',
+        background: 'var(--card-background)',
         borderBottom: '1px solid var(--border-color)',
         position: 'sticky',
         top: '88px',

@@ -220,7 +220,7 @@ export default function IPManagementPanel({ userRole }: IPManagementPanelProps) 
             <div
               key={location}
               style={{
-                background: 'white',
+                background: 'var(--card-background)',
                 padding: '16px',
                 borderRadius: 'var(--border-radius-large)',
                 border: '1px solid var(--border-color)',
@@ -244,7 +244,7 @@ export default function IPManagementPanel({ userRole }: IPManagementPanelProps) 
         <div style={{
           textAlign: 'center',
           padding: '48px',
-          background: 'white',
+          background: 'var(--card-background)',
           borderRadius: 'var(--border-radius-large)',
           border: '1px solid var(--border-color)'
         }}>
@@ -292,7 +292,7 @@ export default function IPManagementPanel({ userRole }: IPManagementPanelProps) 
                   <div
                     key={record.id}
                     style={{
-                      background: 'white',
+                      background: 'var(--card-background)',
                       padding: '16px 20px',
                       borderRadius: 'var(--border-radius-large)',
                       border: '1px solid var(--border-color)',
@@ -341,7 +341,7 @@ export default function IPManagementPanel({ userRole }: IPManagementPanelProps) 
                         onClick={() => handleDeleteIP(record)}
                         style={{
                           padding: '8px',
-                          background: 'white',
+                          background: 'var(--card-background)',
                           border: '1px solid var(--error-color)',
                           borderRadius: '6px',
                           cursor: 'pointer',
@@ -375,7 +375,7 @@ export default function IPManagementPanel({ userRole }: IPManagementPanelProps) 
           padding: '24px'
         }}>
           <div style={{
-            background: 'white',
+            background: 'var(--card-background)',
             borderRadius: 'var(--border-radius-large)',
             padding: '32px',
             maxWidth: '500px',
@@ -446,7 +446,7 @@ export default function IPManagementPanel({ userRole }: IPManagementPanelProps) 
                       onClick={() => setUseCustomLocation(true)}
                       style={{
                         padding: '10px 14px',
-                        background: 'white',
+                        background: 'var(--card-background)',
                         border: '1px solid var(--border-color)',
                         borderRadius: '6px',
                         cursor: 'pointer',
@@ -482,7 +482,7 @@ export default function IPManagementPanel({ userRole }: IPManagementPanelProps) 
                       }}
                       style={{
                         padding: '10px 14px',
-                        background: 'white',
+                        background: 'var(--card-background)',
                         border: '1px solid var(--border-color)',
                         borderRadius: '6px',
                         cursor: 'pointer',
@@ -550,7 +550,7 @@ export default function IPManagementPanel({ userRole }: IPManagementPanelProps) 
                 style={{
                   flex: 1,
                   padding: '12px',
-                  background: 'white',
+                  background: 'var(--card-background)',
                   border: '1px solid var(--border-color)',
                   borderRadius: '6px',
                   cursor: 'pointer',

@@ -247,7 +247,7 @@ export default function NextivaSyncPanel({ userRole, employees, onDataChange }: 
 
       {/* Section 1: CSV Upload */}
       <div style={{
-        background: 'white',
+        background: 'var(--card-background)',
         padding: '24px',
         borderRadius: 'var(--border-radius-large)',
         border: '1px solid var(--border-color)',
@@ -331,7 +331,7 @@ export default function NextivaSyncPanel({ userRole, employees, onDataChange }: 
             }}>
               <div style={{
                 padding: '12px',
-                background: 'white',
+                background: 'var(--card-background)',
                 borderRadius: '8px',
                 border: '1px solid var(--border-color)',
                 textAlign: 'center',
@@ -345,7 +345,7 @@ export default function NextivaSyncPanel({ userRole, employees, onDataChange }: 
               </div>
               <div style={{
                 padding: '12px',
-                background: 'white',
+                background: 'var(--card-background)',
                 borderRadius: '8px',
                 border: '1px solid var(--border-color)',
                 textAlign: 'center',
@@ -359,7 +359,7 @@ export default function NextivaSyncPanel({ userRole, employees, onDataChange }: 
               </div>
               <div style={{
                 padding: '12px',
-                background: 'white',
+                background: 'var(--card-background)',
                 borderRadius: '8px',
                 border: '1px solid var(--border-color)',
                 textAlign: 'center',
@@ -373,7 +373,7 @@ export default function NextivaSyncPanel({ userRole, employees, onDataChange }: 
               </div>
               <div style={{
                 padding: '12px',
-                background: 'white',
+                background: 'var(--card-background)',
                 borderRadius: '8px',
                 border: '1px solid var(--border-color)',
                 textAlign: 'center',
@@ -387,7 +387,7 @@ export default function NextivaSyncPanel({ userRole, employees, onDataChange }: 
               </div>
               <div style={{
                 padding: '12px',
-                background: 'white',
+                background: 'var(--card-background)',
                 borderRadius: '8px',
                 border: uploadResult.errors > 0 ? '1px solid var(--error-color)' : '1px solid var(--border-color)',
                 textAlign: 'center',
@@ -440,7 +440,7 @@ export default function NextivaSyncPanel({ userRole, employees, onDataChange }: 
                       <div style={{
                         marginTop: '8px',
                         padding: '12px',
-                        background: 'white',
+                        background: 'var(--card-background)',
                         borderRadius: '6px',
                         border: '1px solid var(--border-color)',
                       }}>
@@ -499,7 +499,7 @@ export default function NextivaSyncPanel({ userRole, employees, onDataChange }: 
                       <div style={{
                         marginTop: '8px',
                         padding: '12px',
-                        background: 'white',
+                        background: 'var(--card-background)',
                         borderRadius: '6px',
                         border: '1px solid var(--border-color)',
                       }}>
@@ -556,7 +556,7 @@ export default function NextivaSyncPanel({ userRole, employees, onDataChange }: 
                       <div style={{
                         marginTop: '8px',
                         padding: '12px',
-                        background: 'white',
+                        background: 'var(--card-background)',
                         borderRadius: '6px',
                         border: '1px solid var(--border-color)',
                       }}>
@@ -611,7 +611,7 @@ export default function NextivaSyncPanel({ userRole, employees, onDataChange }: 
                       <div style={{
                         marginTop: '8px',
                         padding: '12px',
-                        background: 'white',
+                        background: 'var(--card-background)',
                         borderRadius: '6px',
                         border: '1px solid var(--border-color)',
                       }}>
@@ -642,7 +642,7 @@ export default function NextivaSyncPanel({ userRole, employees, onDataChange }: 
 
       {/* Section 2: Sync History */}
       <div style={{
-        background: 'white',
+        background: 'var(--card-background)',
         padding: '24px',
         borderRadius: 'var(--border-radius-large)',
         border: '1px solid var(--border-color)',
@@ -663,7 +663,7 @@ export default function NextivaSyncPanel({ userRole, employees, onDataChange }: 
               alignItems: 'center',
               gap: '6px',
               padding: '6px 12px',
-              background: 'white',
+              background: 'var(--card-background)',
               border: '1px solid var(--border-color)',
               borderRadius: '6px',
               cursor: loadingHistory ? 'not-allowed' : 'pointer',
@@ -805,7 +805,7 @@ export default function NextivaSyncPanel({ userRole, employees, onDataChange }: 
       {/* Section 3: Manual Mappings (superadmin only) */}
       {isSuperAdmin && (
         <div style={{
-          background: 'white',
+          background: 'var(--card-background)',
           padding: '24px',
           borderRadius: 'var(--border-radius-large)',
           border: '1px solid var(--border-color)',
@@ -867,7 +867,7 @@ export default function NextivaSyncPanel({ userRole, employees, onDataChange }: 
                       borderRadius: '6px',
                       fontSize: '14px',
                       boxSizing: 'border-box',
-                      background: 'white',
+                      background: 'var(--card-background)',
                     }}
                   >
                     <option value="">Select employee...</option>
@@ -978,7 +978,7 @@ export default function NextivaSyncPanel({ userRole, employees, onDataChange }: 
                         fontWeight: '600',
                         color: 'var(--primary-text-color)',
                         fontFamily: 'monospace',
-                        background: 'white',
+                        background: 'var(--card-background)',
                         padding: '2px 8px',
                         borderRadius: '4px',
                         border: '1px solid var(--border-color)',
@@ -1006,7 +1006,7 @@ export default function NextivaSyncPanel({ userRole, employees, onDataChange }: 
                     disabled={deletingMappingId === mapping.id}
                     style={{
                       padding: '8px',
-                      background: 'white',
+                      background: 'var(--card-background)',
                       border: '1px solid var(--error-color)',
                       borderRadius: '6px',
                       cursor: deletingMappingId === mapping.id ? 'not-allowed' : 'pointer',

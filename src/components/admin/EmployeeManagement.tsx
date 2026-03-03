@@ -210,7 +210,7 @@ export default function EmployeeManagement({ employees, onDataChange }: Employee
 
       {/* Employee Table */}
       <div style={{
-        background: 'white',
+        background: 'var(--card-background)',
         borderRadius: 'var(--border-radius-large)',
         border: '1px solid var(--border-color)',
         overflow: 'hidden'
@@ -341,7 +341,7 @@ export default function EmployeeManagement({ employees, onDataChange }: Employee
           padding: '24px'
         }}>
           <div style={{
-            background: 'white',
+            background: 'var(--card-background)',
             borderRadius: 'var(--border-radius-large)',
             padding: '24px',
             maxWidth: '500px',
@@ -402,7 +402,7 @@ export default function EmployeeManagement({ employees, onDataChange }: Employee
                   style={{
                     flex: 1,
                     padding: '10px',
-                    background: 'white',
+                    background: 'var(--card-background)',
                     border: '1px solid var(--border-color)',
                     borderRadius: '6px',
                     cursor: 'pointer'
@@ -429,7 +429,7 @@ export default function EmployeeManagement({ employees, onDataChange }: Employee
           padding: '24px'
         }}>
           <div style={{
-            background: 'white',
+            background: 'var(--card-background)',
             borderRadius: 'var(--border-radius-large)',
             padding: '24px',
             maxWidth: '500px',
@@ -577,7 +577,7 @@ export default function EmployeeManagement({ employees, onDataChange }: Employee
                   style={{
                     flex: 1,
                     padding: '10px',
-                    background: 'white',
+                    background: 'var(--card-background)',
                     border: '1px solid var(--border-color)',
                     borderRadius: '6px',
                     cursor: 'pointer',

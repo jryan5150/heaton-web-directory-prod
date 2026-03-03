@@ -294,7 +294,7 @@ export default function PendingChangesPanel({ pendingChanges, onDataChange, user
           gap: '12px',
           marginBottom: '24px',
           padding: '16px',
-          background: 'white',
+          background: 'var(--card-background)',
           borderRadius: 'var(--border-radius-large)',
           border: '1px solid var(--border-color)'
         }}>
@@ -377,7 +377,7 @@ export default function PendingChangesPanel({ pendingChanges, onDataChange, user
               <div
                 key={change.id}
                 style={{
-                  background: 'white',
+                  background: 'var(--card-background)',
                   padding: '20px',
                   borderRadius: 'var(--border-radius-large)',
                   border: '1px solid var(--border-color)',
@@ -408,7 +408,7 @@ export default function PendingChangesPanel({ pendingChanges, onDataChange, user
                       onClick={() => handleReject(change.id)}
                       style={{
                         padding: '10px 24px',
-                        background: 'white',
+                        background: 'var(--card-background)',
                         color: 'var(--error-color)',
                         border: '2px solid var(--error-color)',
                         borderRadius: '6px',
@@ -537,7 +537,7 @@ export default function PendingChangesPanel({ pendingChanges, onDataChange, user
         <div style={{
           textAlign: 'center',
           padding: '48px',
-          background: 'white',
+          background: 'var(--card-background)',
           borderRadius: 'var(--border-radius-large)',
           border: '1px solid var(--border-color)'
         }}>

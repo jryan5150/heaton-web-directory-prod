@@ -8,6 +8,7 @@
   /* Background Colors */
   --background-color: #EDF2F7;
   --card-background: #ffffff;
+  --input-background: #ffffff;
 
   /* Text Colors */
   --primary-text-color: #1A202C;
@@ -23,6 +24,7 @@
   /* Accent Colors */
   --accent-color: #3182CE;
   --accent-color-hover: #2B6CB0;
+  --accent-hover-color: #2B6CB0;
   --accent-color-light: rgba(49, 130, 206, 0.1);
 
   /* Border & Divider Colors */
@@ -72,6 +74,73 @@
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
+}
+
+/* ==========================================================================
+   Dark Theme for Admin Portal
+   Applied via data-admin-theme="dark" on the admin wrapper element.
+   CSS custom properties cascade to all child components.
+   ========================================================================== */
+
+[data-admin-theme="dark"] {
+  /* Background Colors */
+  --background-color: #0f172a;
+  --card-background: #1e293b;
+  --input-background: #1e293b;
+
+  /* Text Colors */
+  --primary-text-color: #f1f5f9;
+  --secondary-text-color: #94a3b8;
+
+  /* Accent Colors — slightly brighter for dark bg contrast */
+  --accent-color: #60a5fa;
+  --accent-color-hover: #3b82f6;
+  --accent-hover-color: #3b82f6;
+  --accent-color-light: rgba(96, 165, 250, 0.15);
+
+  /* Border & Divider Colors */
+  --border-color: #334155;
+  --divider-color: #475569;
+
+  /* Status Colors — brighter for dark bg */
+  --success-color: #34d399;
+  --warning-color: #fbbf24;
+  --error-color: #f87171;
+
+  /* Shadows — deeper for dark surfaces */
+  --shadow-small: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-large: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* Ensure form elements inherit dark mode colors */
+[data-admin-theme="dark"] input,
+[data-admin-theme="dark"] select,
+[data-admin-theme="dark"] textarea {
+  background-color: var(--input-background);
+  color: var(--primary-text-color);
+  border-color: var(--border-color);
+}
+
+[data-admin-theme="dark"] input::placeholder,
+[data-admin-theme="dark"] textarea::placeholder {
+  color: var(--secondary-text-color);
+}
+
+/* Theme transition for smooth switching */
+[data-admin-theme] {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+[data-admin-theme] * {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-admin-theme],
+  [data-admin-theme] * {
+    transition: none !important;
+  }
 }
 
 /* ==========================================================================

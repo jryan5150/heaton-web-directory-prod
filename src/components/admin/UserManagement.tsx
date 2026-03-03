@@ -141,7 +141,7 @@ export default function UserManagement({ currentUserRole }: UserManagementProps)
       <div style={{
         textAlign: 'center',
         padding: '48px',
-        background: 'white',
+        background: 'var(--card-background)',
         borderRadius: 'var(--border-radius-large)',
         border: '1px solid var(--border-color)'
       }}>
@@ -208,7 +208,7 @@ export default function UserManagement({ currentUserRole }: UserManagementProps)
           <div
             key={user.id}
             style={{
-              background: 'white',
+              background: 'var(--card-background)',
               padding: '20px',
               borderRadius: 'var(--border-radius-large)',
               border: '1px solid var(--border-color)',
@@ -254,7 +254,7 @@ export default function UserManagement({ currentUserRole }: UserManagementProps)
                 onClick={() => handleDeleteUser(user)}
                 style={{
                   padding: '8px',
-                  background: 'white',
+                  background: 'var(--card-background)',
                   border: '1px solid var(--error-color)',
                   borderRadius: '6px',
                   cursor: 'pointer',
@@ -284,7 +284,7 @@ export default function UserManagement({ currentUserRole }: UserManagementProps)
           padding: '24px'
         }}>
           <div style={{
-            background: 'white',
+            background: 'var(--card-background)',
             borderRadius: 'var(--border-radius-large)',
             padding: '32px',
             maxWidth: '500px',
@@ -403,7 +403,7 @@ export default function UserManagement({ currentUserRole }: UserManagementProps)
                 style={{
                   flex: 1,
                   padding: '12px',
-                  background: 'white',
+                  background: 'var(--card-background)',
                   border: '1px solid var(--border-color)',
                   borderRadius: '6px',
                   cursor: 'pointer',
