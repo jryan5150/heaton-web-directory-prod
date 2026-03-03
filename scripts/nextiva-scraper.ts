@@ -233,68 +233,45 @@ async function navigateToUsersPage(
 ): Promise<void> {
   log('Navigating to Users management page...')
 
-  // First, make sure the dashboard SPA has finished loading.
-  // The post-login page at {tenant}.nextos.com/apps/home/#/ is a SPA
-  // that may still be rendering when we get here.
-  log('Waiting for dashboard SPA to finish loading...')
-  await page.waitForLoadState('networkidle', { timeout: NAVIGATION_TIMEOUT_MS })
-  // Give the SPA extra time to render after network settles
-  await page.waitForTimeout(3_000)
-  await takeScreenshot(page, 'dashboard-loaded')
+  // The Users page is at {tenant}.nextos.com/apps/platform-admin/#/users
+  // (discovered via screenshot analysis of actual navigation).
+  // Try direct URL first, then fall back to sidebar click.
 
-  // NextOS uses hash-based routing. The Users page is typically at
-  // {tenant}.nextos.com/apps/home/#/users or accessible via the admin
-  // section. Try hash navigation first since it's the SPA pattern.
-  const hashPaths = ['#/users', '#/admin/users', '#/management/users']
+  const usersUrl = `${tenantBaseUrl}/apps/platform-admin/#/users`
+  log(`Navigating directly to: ${usersUrl}`)
 
-  for (const hash of hashPaths) {
-    try {
-      const usersUrl = `${tenantBaseUrl}/apps/home/${hash}`
-      log(`Trying hash navigation: ${usersUrl}`)
-      await page.goto(usersUrl, {
-        waitUntil: 'networkidle',
-        timeout: NAVIGATION_TIMEOUT_MS,
-      })
-      await page.waitForTimeout(2_000)
-
-      // Check if we landed on a page with user-related content
-      const hasUsersContent = await page
-        .waitForSelector(
-          'text=Users, text=User Management, table, [class*="user"]',
-          { timeout: 10_000 }
-        )
-        .catch(() => null)
-
-      if (hasUsersContent) {
-        log(`Users page loaded via hash route: ${hash}`)
-        await takeScreenshot(page, 'users-page-loaded')
-        return
-      }
-    } catch {
-      // Try next hash path
-    }
+  try {
+    await page.goto(usersUrl, {
+      waitUntil: 'networkidle',
+      timeout: NAVIGATION_TIMEOUT_MS,
+    })
+    // Wait for the "Current Users" heading to confirm we're on the right page
+    await page.waitForSelector('text=Current Users', { timeout: 15_000 })
+    log('Users page loaded via direct URL')
+    await takeScreenshot(page, 'users-page-loaded')
+    return
+  } catch {
+    log('Direct URL failed, falling back to sidebar navigation...')
   }
 
-  // Fallback: go back to the dashboard and look for a "Users" link/button
-  log('Hash navigation failed, trying to find Users in the dashboard UI...')
+  // Fallback: wait for dashboard to load, then click "Users" in sidebar
+  log('Waiting for dashboard SPA to load...')
   await page.goto(`${tenantBaseUrl}/apps/home/#/`, {
     waitUntil: 'networkidle',
     timeout: NAVIGATION_TIMEOUT_MS,
   })
-  await page.waitForTimeout(3_000)
-  await takeScreenshot(page, 'dashboard-for-nav')
+  // Wait for sidebar to render
+  await page.waitForSelector('text=Admin Home', { timeout: 15_000 })
+  await page.waitForTimeout(2_000)
+  await takeScreenshot(page, 'dashboard-loaded')
 
+  // Click "Users" in the sidebar (under "PEOPLE" section)
   const menuSelectors = [
     'a:has-text("Users")',
     'button:has-text("Users")',
-    '[data-testid="users"]',
-    '[data-testid="users-nav"]',
     'nav >> text=Users',
     'a[href*="users"]',
-    'a[href*="Users"]',
     'span:has-text("Users")',
-    // NextOS dashboard cards — may be clickable tiles
-    'div:has-text("Users") >> visible=true',
   ]
 
   for (const selector of menuSelectors) {
@@ -304,10 +281,7 @@ async function navigateToUsersPage(
       })
       if (menuItem) {
         await menuItem.click()
-        await page.waitForLoadState('networkidle', {
-          timeout: NAVIGATION_TIMEOUT_MS,
-        })
-        await page.waitForTimeout(2_000)
+        await page.waitForSelector('text=Current Users', { timeout: 15_000 })
         log(`Users page loaded via menu click: ${selector}`)
         log(`Current URL: ${page.url()}`)
         await takeScreenshot(page, 'users-page-via-menu')
@@ -325,24 +299,29 @@ async function navigateToUsersPage(
 }
 
 async function exportUsersCSV(page: Page): Promise<string> {
-  log('Looking for CSV export button...')
+  log('Looking for CSV export/download button...')
 
-  // Nextiva's Users page has a "Download CSV" button at the top right
+  // The Nextiva Users page has a download icon (SVG arrow-down) near
+  // the "Current Users" heading, to the left of the search bar.
+  // It's an icon-only button — no text label.
   const exportSelectors = [
+    // Aria labels (most reliable for icon buttons)
+    '[aria-label*="download" i]',
+    '[aria-label*="export" i]',
+    '[aria-label*="csv" i]',
+    // Tooltip/title attributes
+    '[title*="download" i]',
+    '[title*="export" i]',
+    '[title*="csv" i]',
+    // Data test IDs
+    '[data-testid*="download"]',
+    '[data-testid*="export"]',
+    // Text-based buttons
     'button:has-text("Download CSV")',
-    'a:has-text("Download CSV")',
     'button:has-text("Export CSV")',
     'button:has-text("Export")',
     'button:has-text("Download")',
-    'a:has-text("Export")',
-    'a:has-text("Download")',
-    '[data-testid="export"]',
-    '[data-testid="export-csv"]',
-    '[data-testid="download-csv"]',
-    '[aria-label="Export"]',
-    '[aria-label="Download"]',
-    '[aria-label="Download CSV"]',
-    'button >> svg', // Icon-only export buttons
+    'a:has-text("Download CSV")',
   ]
 
   let exportButton = null
@@ -350,7 +329,7 @@ async function exportUsersCSV(page: Page): Promise<string> {
   for (const selector of exportSelectors) {
     try {
       exportButton = await page.waitForSelector(selector, {
-        timeout: 5_000,
+        timeout: 3_000,
       })
       if (exportButton) {
         log(`Found export button with selector: ${selector}`)
@@ -361,6 +340,28 @@ async function exportUsersCSV(page: Page): Promise<string> {
     }
   }
 
+  // Last resort: find the download icon SVG button near "Current Users"
+  if (!exportButton) {
+    log('Trying to locate download icon button near Current Users heading...')
+    try {
+      // The download icon is typically the first icon button in the toolbar
+      // area near the "Current Users" heading, before the search input
+      const buttons = await page.$$('button:has(svg)')
+      for (const btn of buttons) {
+        const bbox = await btn.boundingBox()
+        // The download button should be in the top area of the page
+        // (above the user list), roughly in the header bar area
+        if (bbox && bbox.y < 250 && bbox.y > 100) {
+          log(`Found SVG button at position (${bbox.x}, ${bbox.y})`)
+          exportButton = btn
+          break
+        }
+      }
+    } catch (err) {
+      log(`SVG button search failed: ${err}`)
+    }
+  }
+
   if (!exportButton) {
     await takeScreenshot(page, 'export-button-not-found')
     throw new Error(
@@ -368,36 +369,62 @@ async function exportUsersCSV(page: Page): Promise<string> {
     )
   }
 
-  // Set up download listener before clicking
+  await takeScreenshot(page, 'before-export-click')
+
+  // Set up download listener BEFORE clicking — the download may fire
+  // immediately or after a short delay
   log('Initiating CSV download...')
   const downloadPromise = page.waitForEvent('download', {
     timeout: DOWNLOAD_TIMEOUT_MS,
   })
 
   await exportButton.click()
+  log('Export button clicked')
 
-  // Some portals show a dropdown with format options — look for CSV option
+  // Take a screenshot to see what happened after clicking
+  await page.waitForTimeout(2_000)
+  await takeScreenshot(page, 'after-export-click')
+
+  // Check if a modal/dropdown appeared that needs further interaction
   const csvOption = await page
-    .$('text=CSV, text=.csv, [data-value="csv"]')
+    .$('text=CSV, text=.csv, [data-value="csv"], button:has-text("Download"), button:has-text("Export")')
     .catch(() => null)
 
   if (csvOption) {
-    log('Selecting CSV format from dropdown...')
+    log('Found secondary option after click, selecting...')
     await csvOption.click()
   }
 
-  const download = await downloadPromise
-  log(`Download started: ${download.suggestedFilename()}`)
+  let csvContent: string
 
-  // Save the downloaded file
-  const downloadPath = join(SCREENSHOT_DIR, download.suggestedFilename() || 'nextiva-users.csv')
-  ensureScreenshotDir()
-  await download.saveAs(downloadPath)
+  try {
+    // Try to catch the standard browser download event
+    const download = await downloadPromise
+    log(`Download started: ${download.suggestedFilename()}`)
 
-  log(`CSV saved to: ${downloadPath}`)
+    const downloadPath = join(SCREENSHOT_DIR, download.suggestedFilename() || 'nextiva-users.csv')
+    ensureScreenshotDir()
+    await download.saveAs(downloadPath)
+    log(`CSV saved to: ${downloadPath}`)
 
-  // Read the file contents
-  const csvContent = readFileSync(downloadPath, 'utf-8')
+    csvContent = readFileSync(downloadPath, 'utf-8')
+  } catch (downloadErr) {
+    // If download event didn't fire, the SPA might have generated a
+    // blob URL or opened a new tab. Check for blob/data URLs.
+    log(`Standard download failed: ${downloadErr}. Checking for alternative download methods...`)
+    await takeScreenshot(page, 'download-fallback')
+
+    // Check if a new page/tab was opened with the CSV
+    const pages = page.context().pages()
+    if (pages.length > 1) {
+      const newPage = pages[pages.length - 1]
+      log(`Found new tab: ${newPage.url()}`)
+      csvContent = await newPage.content()
+      await newPage.close()
+    } else {
+      throw downloadErr
+    }
+  }
 
   if (!csvContent || csvContent.trim().length === 0) {
     throw new Error('Downloaded CSV file is empty')
