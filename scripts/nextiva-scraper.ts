@@ -30,7 +30,8 @@ const REQUIRED_ENV_VARS = [
   'SYNC_SECRET',
 ] as const
 
-const LOGIN_URL = 'https://admin.nextiva.com'
+const LOGIN_URL = 'https://authenticate.nextiva.com/AccountValidation/login.action'
+const ADMIN_BASE_URL = 'https://np3.nextiva.com/NextOSPortal'
 const LOGIN_TIMEOUT_MS = 60_000
 const NAVIGATION_TIMEOUT_MS = 30_000
 const DOWNLOAD_TIMEOUT_MS = 60_000
@@ -176,12 +177,16 @@ async function login(
         log('Login form submitted via Enter key')
       }
 
-      // Wait for navigation away from the login page
-      await page.waitForURL((url) => !url.href.includes('login'), {
-        timeout: LOGIN_TIMEOUT_MS,
-      })
+      // Wait for navigation away from the login page — after successful auth,
+      // Nextiva redirects from authenticate.nextiva.com to np3.nextiva.com
+      await page.waitForURL(
+        (url) =>
+          !url.href.includes('authenticate.nextiva.com') &&
+          !url.href.includes('login'),
+        { timeout: LOGIN_TIMEOUT_MS }
+      )
 
-      log('Login successful — navigated past login page')
+      log(`Login successful — redirected to: ${page.url()}`)
       return
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err))
@@ -210,11 +215,12 @@ async function login(
 async function navigateToUsersPage(page: Page): Promise<void> {
   log('Navigating to Users management page...')
 
-  // Try direct URL navigation first (most Nextiva admin portals use this path)
+  // Try direct URL navigation first — NextOS admin portal paths
   const usersUrls = [
-    'https://admin.nextiva.com/users',
-    'https://admin.nextiva.com/#/users',
-    'https://admin.nextiva.com/management/users',
+    `${ADMIN_BASE_URL}/ncp/users`,
+    `${ADMIN_BASE_URL}/ncp/#/users`,
+    `${ADMIN_BASE_URL}/ncp/management/users`,
+    `${ADMIN_BASE_URL}/ncp/dashboard/users`,
   ]
 
   for (const url of usersUrls) {
@@ -279,18 +285,21 @@ async function navigateToUsersPage(page: Page): Promise<void> {
 async function exportUsersCSV(page: Page): Promise<string> {
   log('Looking for CSV export button...')
 
-  // Common export button selectors for Nextiva admin
+  // Nextiva's Users page has a "Download CSV" button at the top right
   const exportSelectors = [
+    'button:has-text("Download CSV")',
+    'a:has-text("Download CSV")',
+    'button:has-text("Export CSV")',
     'button:has-text("Export")',
     'button:has-text("Download")',
-    'button:has-text("Export CSV")',
-    'button:has-text("Download CSV")',
     'a:has-text("Export")',
     'a:has-text("Download")',
     '[data-testid="export"]',
     '[data-testid="export-csv"]',
+    '[data-testid="download-csv"]',
     '[aria-label="Export"]',
     '[aria-label="Download"]',
+    '[aria-label="Download CSV"]',
     'button >> svg', // Icon-only export buttons
   ]
 
@@ -433,6 +442,10 @@ async function main(): Promise<void> {
 
     // Step 1: Login
     await login(page, env.NEXTIVA_USERNAME, env.NEXTIVA_PASSWORD)
+
+    // Screenshot the dashboard for debugging
+    await takeScreenshot(page, 'post-login-dashboard')
+    log(`Current URL after login: ${page.url()}`)
 
     // Step 2: Navigate to Users page
     await navigateToUsersPage(page)
