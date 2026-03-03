@@ -299,10 +299,25 @@ async function navigateToUsersPage(
 }
 
 async function exportUsersCSV(page: Page): Promise<string> {
+  // Wait for user data rows to actually load before exporting.
+  // The SPA renders the page shell first, then fetches user data async.
+  // Without this wait, the CSV export captures headers only.
+  log('Waiting for user data to load...')
+  try {
+    // Wait for a user row link (email) to appear — confirms real data loaded
+    await page.waitForSelector('a[href*="@"]', { timeout: 30_000 })
+    log('User data rows loaded')
+  } catch {
+    // Fallback: wait for any table row or list item
+    log('Email link not found, waiting for table rows...')
+    await page.waitForTimeout(10_000)
+  }
+  await takeScreenshot(page, 'users-data-loaded')
+
   log('Looking for CSV export/download button...')
 
   // The Nextiva Users page has a download icon (SVG arrow-down) near
-  // the "Current Users" heading, to the left of the search bar.
+  // the "Current Users" heading — tooltip says "Download CSV File".
   // It's an icon-only button — no text label.
   const exportSelectors = [
     // Aria labels (most reliable for icon buttons)
@@ -432,6 +447,13 @@ async function exportUsersCSV(page: Page): Promise<string> {
 
   const lineCount = csvContent.split('\n').filter((line) => line.trim()).length
   log(`CSV contains ${lineCount} lines (including header)`)
+
+  if (lineCount <= 1) {
+    throw new Error(
+      `CSV contains only ${lineCount} line(s) — expected user data rows. ` +
+      'The export may have triggered before data finished loading.'
+    )
+  }
 
   return csvContent
 }
