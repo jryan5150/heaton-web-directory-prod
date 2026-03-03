@@ -9,10 +9,12 @@ dist/
 
 # Environment variables
 .env
+.env.*
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+.env.vercel-prod
 SESSION_SECRET.txt
 
 # Logs
@@ -54,3 +56,4 @@ dist/
 electron/create-icon.html
 
 /src/generated/prisma
+.vercel

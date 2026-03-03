@@ -260,10 +260,7 @@ Get Steps 1-6 done first for a quick demo deployment, then new Claude session fo
    - Cron runs at 9:00 AM daily
    - Only sends if there are approved changes
 
-6. **User passwords** (generated and stored in users.json):
-   - Superadmin: `HeatonAdmin2025!`
-   - Approver: `Balderas2025!`
-   - Editor: `HeatonEditor2025`
+6. **User accounts**: Passwords rotated and stored securely outside repo. SSO via Microsoft 365 is the primary login method for @heatoneye.com users.
 
 ---
 

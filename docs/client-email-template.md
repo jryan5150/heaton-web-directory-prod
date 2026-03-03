@@ -36,21 +36,17 @@ This secure, password-protected system replaces the previous OAuth-based authent
 
 ---
 
-## YOUR TEAM'S LOGIN CREDENTIALS
+## YOUR TEAM'S LOGIN
 
-**Super Admin (Full Access):**
-- Email: jryan5150@gmail.com
-- Password: HeatonAdmin2025!
+**Recommended: Sign in with Microsoft 365**
+- Go to `https://staff.heatoneye.com/admin`
+- Click "Sign in with Microsoft"
+- Use your @heatoneye.com Microsoft 365 account
+- Your admin must add your email to the system first
 
-**Approver (Review & Approve):**
-- Email: m.balderas@heatoneye.com
-- Password: Balderas2025!
-
-**Editor (Submit Changes):**
-- Email: editor@internal
-- Password: HeatonEditor2025
-
-⚠️ **IMPORTANT:** Please change these passwords after your first login and store them securely.
+**Alternative: Email/Password Login**
+- Credentials provided separately via secure channel
+- Contact your admin for access
 
 ---
 

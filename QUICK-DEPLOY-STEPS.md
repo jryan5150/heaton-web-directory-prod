@@ -129,7 +129,7 @@ npm run dev
 
 **You should:**
 1. Be redirected to login page
-2. Login with `jryan5150@gmail.com` / `HeatonAdmin2025!`
+2. Login with `jryan5150@gmail.com` (use stored password or Microsoft SSO)
 3. See admin dashboard
 4. Be able to click through all tabs
 
@@ -187,22 +187,11 @@ SESSION_SECRET=kj3h4k5jh34k5jh3k4j5h3k4j5h3k4j5h3k4j5h3k45=
 **Public Directory:**
 `https://staff.heatoneye.com`
 
-**Admin Login (for you):**
+**Admin Login:**
 `https://staff.heatoneye.com/admin`
-- Email: jryan5150@gmail.com
-- Password: HeatonAdmin2025!
-
-**Admin Login (for M. Balderas):**
-`https://staff.heatoneye.com/admin`
-- Email: m.balderas@heatoneye.com
-- Password: Balderas2025!
-- Role: Can approve/reject (can't publish)
-
-**Admin Login (for other staff):**
-`https://staff.heatoneye.com/admin`
-- Email: editor@internal
-- Password: HeatonEditor2025
-- Role: Can submit changes only
+- Microsoft SSO: Click "Sign in with Microsoft" (recommended for @heatoneye.com users)
+- Email/password: Use stored credentials (passwords not stored in repo)
+- Roles: superadmin (full access), approver (review/approve), editor (submit only)
 
 ---
 

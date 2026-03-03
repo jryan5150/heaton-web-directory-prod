@@ -85,9 +85,10 @@ kj3h4k5jh34k5jh3k4j5h3k4j5h3k4j5h3k4j5h3k45=
    - **Admin login:** `https://your-project.vercel.app/admin` (should redirect to login)
 
 ### Test Login Credentials:
-- **Super Admin:** `jryan5150@gmail.com` / `HeatonAdmin2025!`
-- **Approver:** `m.balderas@heatoneye.com` / `Balderas2025!`
-- **Editor:** `editor@internal` / `HeatonEditor2025`
+- **Super Admin:** `jryan5150@gmail.com` — password stored securely (not in repo)
+- **Approver:** `m.balderas@heatoneye.com` — password stored securely (not in repo)
+- **Editor:** `editor@internal` — password stored securely (not in repo)
+- SSO users sign in via Microsoft 365 (no password needed)
 
 ---
 
