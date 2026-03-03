@@ -258,6 +258,35 @@ export default function PendingChangesPanel({ pendingChanges, onDataChange, user
 
   return (
     <div>
+      {/* Workflow Guide */}
+      <div style={{
+        padding: '16px 20px',
+        marginBottom: '24px',
+        background: 'rgba(49, 130, 206, 0.08)',
+        border: '1px solid rgba(49, 130, 206, 0.2)',
+        borderRadius: 'var(--border-radius-large)',
+        fontSize: '14px',
+        color: 'var(--secondary-text-color)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '16px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+          <span style={{ fontWeight: '700', color: 'var(--warning-color)' }}>1</span>
+          <span>Review</span>
+        </div>
+        <span style={{ color: 'var(--border-color)' }}>→</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+          <span style={{ fontWeight: '700', color: 'var(--success-color)' }}>2</span>
+          <span>Approve or Reject</span>
+        </div>
+        <span style={{ color: 'var(--border-color)' }}>→</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+          <span style={{ fontWeight: '700', color: 'var(--accent-color)' }}>3</span>
+          <span>Publish to Live Directory</span>
+        </div>
+      </div>
+
       {/* Action Bar */}
       {(approvedItems.length > 0 || selectedChanges.size > 0) && (
         <div style={{
@@ -355,69 +384,83 @@ export default function PendingChangesPanel({ pendingChanges, onDataChange, user
                   boxShadow: 'var(--shadow-small)'
                 }}
               >
-                <div style={{ display: 'flex', gap: '16px' }}>
-                  <div style={{ flex: 1 }}>
-                    {renderChangeDetails(change)}
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {!isEditor && (
-                      <>
-                        <input
-                          type="checkbox"
-                          checked={selectedChanges.has(change.id)}
-                          onChange={() => toggleSelection(change.id)}
-                          style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                        />
-                        <button
-                          onClick={() => handleApprove(change.id)}
-                          style={{
-                            padding: '8px 12px',
-                            background: 'var(--success-color)',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '13px',
-                            fontWeight: '600',
-                            whiteSpace: 'nowrap'
-                          }}
-                        >
-                          Approve
-                        </button>
-                        <button
-                          onClick={() => handleReject(change.id)}
-                          style={{
-                            padding: '8px 12px',
-                            background: 'white',
-                            color: 'var(--error-color)',
-                            border: '1px solid var(--error-color)',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '13px',
-                            fontWeight: '600',
-                            whiteSpace: 'nowrap'
-                          }}
-                        >
-                          Reject
-                        </button>
-                      </>
-                    )}
-                    {isEditor && (
-                      <div style={{
-                        padding: '8px 12px',
-                        background: 'rgba(107, 114, 128, 0.1)',
-                        border: '1px solid rgba(107, 114, 128, 0.3)',
+                {renderChangeDetails(change)}
+                {!isEditor && (
+                  <div style={{
+                    display: 'flex',
+                    gap: '12px',
+                    marginTop: '16px',
+                    paddingTop: '16px',
+                    borderTop: '1px solid var(--border-color)',
+                    alignItems: 'center'
+                  }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px', color: 'var(--secondary-text-color)' }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedChanges.has(change.id)}
+                        onChange={() => toggleSelection(change.id)}
+                        style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                      />
+                      Select
+                    </label>
+                    <div style={{ flex: 1 }} />
+                    <button
+                      onClick={() => handleReject(change.id)}
+                      style={{
+                        padding: '10px 24px',
+                        background: 'white',
+                        color: 'var(--error-color)',
+                        border: '2px solid var(--error-color)',
                         borderRadius: '6px',
-                        fontSize: '12px',
-                        color: 'var(--secondary-text-color)',
-                        textAlign: 'center',
-                        fontWeight: '600'
-                      }}>
-                        Awaiting Approval
-                      </div>
-                    )}
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '700',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <XMarkIcon style={{ width: '18px', height: '18px' }} />
+                      Reject
+                    </button>
+                    <button
+                      onClick={() => handleApprove(change.id)}
+                      style={{
+                        padding: '10px 24px',
+                        background: 'var(--success-color)',
+                        color: 'white',
+                        border: '2px solid var(--success-color)',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '700',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <CheckIcon style={{ width: '18px', height: '18px' }} />
+                      Approve
+                    </button>
                   </div>
-                </div>
+                )}
+                {isEditor && (
+                  <div style={{
+                    marginTop: '16px',
+                    paddingTop: '16px',
+                    borderTop: '1px solid var(--border-color)',
+                    padding: '10px 16px',
+                    background: 'rgba(107, 114, 128, 0.1)',
+                    border: '1px solid rgba(107, 114, 128, 0.3)',
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                    color: 'var(--secondary-text-color)',
+                    textAlign: 'center',
+                    fontWeight: '600'
+                  }}>
+                    Awaiting Approval from Admin
+                  </div>
+                )}
               </div>
             ))}
           </div>

@@ -12,6 +12,7 @@ interface EmployeeManagementProps {
 
 export default function EmployeeManagement({ employees, onDataChange }: EmployeeManagementProps) {
   const [searchTerm, setSearchTerm] = useState('')
+  const [displayLimit, setDisplayLimit] = useState(50)
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
   const [newEmployee, setNewEmployee] = useState<Partial<Employee>>({
@@ -176,7 +177,7 @@ export default function EmployeeManagement({ employees, onDataChange }: Employee
         <input
           type="text"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => { setSearchTerm(e.target.value); setDisplayLimit(50) }}
           placeholder="Search employees..."
           style={{
             flex: 1,
@@ -227,7 +228,7 @@ export default function EmployeeManagement({ employees, onDataChange }: Employee
               </tr>
             </thead>
             <tbody>
-              {filteredEmployees.slice(0, 50).map((employee) => (
+              {filteredEmployees.slice(0, displayLimit).map((employee) => (
                 <tr key={employee.id} style={{ borderTop: '1px solid var(--border-color)' }}>
                   <td style={{ padding: '12px 16px', fontSize: '14px' }}>
                     {employee.firstName} {employee.lastName}
@@ -281,16 +282,48 @@ export default function EmployeeManagement({ employees, onDataChange }: Employee
             </tbody>
           </table>
         </div>
-        {filteredEmployees.length > 50 && (
+        {filteredEmployees.length > displayLimit && (
           <div style={{
             padding: '12px 16px',
             textAlign: 'center',
             fontSize: '13px',
             color: 'var(--secondary-text-color)',
             borderTop: '1px solid var(--border-color)',
-            background: 'var(--background-color)'
+            background: 'var(--background-color)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '12px'
           }}>
-            Showing 50 of {filteredEmployees.length} employees
+            <span>Showing {displayLimit} of {filteredEmployees.length} employees</span>
+            <button
+              onClick={() => setDisplayLimit(prev => prev + 50)}
+              style={{
+                padding: '4px 12px',
+                fontSize: '13px',
+                background: 'var(--accent-color, #3182CE)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              Load More
+            </button>
+            <button
+              onClick={() => setDisplayLimit(filteredEmployees.length)}
+              style={{
+                padding: '4px 12px',
+                fontSize: '13px',
+                background: 'transparent',
+                color: 'var(--accent-color, #3182CE)',
+                border: '1px solid var(--accent-color, #3182CE)',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              Show All
+            </button>
           </div>
         )}
       </div>
