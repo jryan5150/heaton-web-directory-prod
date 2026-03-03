@@ -1,0 +1,60 @@
+# Nextiva CSV Sync — Automated daily export from Nextiva admin portal
+#
+# Prerequisites:
+#   1. Add `playwright` to package.json devDependencies:
+#        npm install -D playwright
+#   2. Add `tsx` to package.json devDependencies (if not already present):
+#        npm install -D tsx
+#   3. Configure the following GitHub Secrets:
+#        - NEXTIVA_USERNAME  : Nextiva admin email address
+#        - NEXTIVA_PASSWORD  : Nextiva admin password
+#        - SYNC_UPLOAD_URL   : https://staff.heatoneye.com/api/admin/sync/upload
+#        - SYNC_SECRET       : Bearer token matching the SYNC_SECRET env var on the server
+
+name: Nextiva CSV Sync
+
+on:
+  schedule:
+    # 6:00 AM CST (UTC-6) on weekdays — CST does not observe DST the same
+    # as CDT. During CDT (Mar-Nov) this fires at 7 AM local. Adjust to
+    # '0 11 * * 1-5' if you want 6 AM CDT during summer.
+    - cron: '0 12 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium --with-deps
+
+      - name: Run Nextiva scraper
+        run: npx tsx scripts/nextiva-scraper.ts
+        env:
+          NEXTIVA_USERNAME: ${{ secrets.NEXTIVA_USERNAME }}
+          NEXTIVA_PASSWORD: ${{ secrets.NEXTIVA_PASSWORD }}
+          SYNC_UPLOAD_URL: ${{ secrets.SYNC_UPLOAD_URL }}
+          SYNC_SECRET: ${{ secrets.SYNC_SECRET }}
+
+      - name: Upload debug screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nextiva-scraper-debug-${{ github.run_id }}
+          path: screenshots/
+          retention-days: 7
+          if-no-files-found: ignore
