@@ -31,7 +31,6 @@ const REQUIRED_ENV_VARS = [
 ] as const
 
 const LOGIN_URL = 'https://authenticate.nextiva.com/AccountValidation/login.action'
-const ADMIN_BASE_URL = 'https://np3.nextiva.com/NextOSPortal'
 const LOGIN_TIMEOUT_MS = 60_000
 const NAVIGATION_TIMEOUT_MS = 30_000
 const DOWNLOAD_TIMEOUT_MS = 60_000
@@ -104,7 +103,7 @@ async function login(
   page: Page,
   username: string,
   password: string
-): Promise<void> {
+): Promise<string> {
   let lastError: Error | null = null
 
   for (let attempt = 1; attempt <= MAX_LOGIN_ATTEMPTS; attempt++) {
@@ -195,8 +194,15 @@ async function login(
         { timeout: LOGIN_TIMEOUT_MS }
       )
 
-      log(`Login successful — redirected to: ${page.url()}`)
-      return
+      const postLoginUrl = page.url()
+      log(`Login successful — redirected to: ${postLoginUrl}`)
+
+      // Extract the tenant base URL (e.g. https://heatoneye.nextos.com)
+      const urlObj = new URL(postLoginUrl)
+      const tenantBaseUrl = `${urlObj.protocol}//${urlObj.host}`
+      log(`Tenant base URL: ${tenantBaseUrl}`)
+
+      return tenantBaseUrl
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err))
       logError(
@@ -221,50 +227,74 @@ async function login(
 // Navigate to Users page and export CSV
 // ---------------------------------------------------------------------------
 
-async function navigateToUsersPage(page: Page): Promise<void> {
+async function navigateToUsersPage(
+  page: Page,
+  tenantBaseUrl: string
+): Promise<void> {
   log('Navigating to Users management page...')
 
-  // Try direct URL navigation first — NextOS admin portal paths
-  const usersUrls = [
-    `${ADMIN_BASE_URL}/ncp/users`,
-    `${ADMIN_BASE_URL}/ncp/#/users`,
-    `${ADMIN_BASE_URL}/ncp/management/users`,
-    `${ADMIN_BASE_URL}/ncp/dashboard/users`,
-  ]
+  // First, make sure the dashboard SPA has finished loading.
+  // The post-login page at {tenant}.nextos.com/apps/home/#/ is a SPA
+  // that may still be rendering when we get here.
+  log('Waiting for dashboard SPA to finish loading...')
+  await page.waitForLoadState('networkidle', { timeout: NAVIGATION_TIMEOUT_MS })
+  // Give the SPA extra time to render after network settles
+  await page.waitForTimeout(3_000)
+  await takeScreenshot(page, 'dashboard-loaded')
 
-  for (const url of usersUrls) {
+  // NextOS uses hash-based routing. The Users page is typically at
+  // {tenant}.nextos.com/apps/home/#/users or accessible via the admin
+  // section. Try hash navigation first since it's the SPA pattern.
+  const hashPaths = ['#/users', '#/admin/users', '#/management/users']
+
+  for (const hash of hashPaths) {
     try {
-      await page.goto(url, {
+      const usersUrl = `${tenantBaseUrl}/apps/home/${hash}`
+      log(`Trying hash navigation: ${usersUrl}`)
+      await page.goto(usersUrl, {
         waitUntil: 'networkidle',
         timeout: NAVIGATION_TIMEOUT_MS,
       })
+      await page.waitForTimeout(2_000)
 
       // Check if we landed on a page with user-related content
       const hasUsersContent = await page
         .waitForSelector(
-          'text=Users, text=User Management, [data-testid="users"], table',
+          'text=Users, text=User Management, table, [class*="user"]',
           { timeout: 10_000 }
         )
         .catch(() => null)
 
       if (hasUsersContent) {
-        log(`Users page loaded via direct URL: ${url}`)
+        log(`Users page loaded via hash route: ${hash}`)
+        await takeScreenshot(page, 'users-page-loaded')
         return
       }
     } catch {
-      // Try next URL
+      // Try next hash path
     }
   }
 
-  // Fallback: navigate via the sidebar/menu
-  log('Direct URL navigation failed, trying sidebar navigation...')
+  // Fallback: go back to the dashboard and look for a "Users" link/button
+  log('Hash navigation failed, trying to find Users in the dashboard UI...')
+  await page.goto(`${tenantBaseUrl}/apps/home/#/`, {
+    waitUntil: 'networkidle',
+    timeout: NAVIGATION_TIMEOUT_MS,
+  })
+  await page.waitForTimeout(3_000)
+  await takeScreenshot(page, 'dashboard-for-nav')
 
   const menuSelectors = [
     'a:has-text("Users")',
-    'nav >> text=Users',
+    'button:has-text("Users")',
+    '[data-testid="users"]',
     '[data-testid="users-nav"]',
+    'nav >> text=Users',
     'a[href*="users"]',
+    'a[href*="Users"]',
     'span:has-text("Users")',
+    // NextOS dashboard cards — may be clickable tiles
+    'div:has-text("Users") >> visible=true',
   ]
 
   for (const selector of menuSelectors) {
@@ -277,7 +307,10 @@ async function navigateToUsersPage(page: Page): Promise<void> {
         await page.waitForLoadState('networkidle', {
           timeout: NAVIGATION_TIMEOUT_MS,
         })
+        await page.waitForTimeout(2_000)
         log(`Users page loaded via menu click: ${selector}`)
+        log(`Current URL: ${page.url()}`)
+        await takeScreenshot(page, 'users-page-via-menu')
         return
       }
     } catch {
@@ -287,7 +320,7 @@ async function navigateToUsersPage(page: Page): Promise<void> {
 
   await takeScreenshot(page, 'users-page-navigation-failure')
   throw new Error(
-    'Could not navigate to Users page — none of the expected URLs or menu selectors worked'
+    'Could not navigate to Users page — none of the expected hash routes or menu selectors worked'
   )
 }
 
@@ -449,15 +482,16 @@ async function main(): Promise<void> {
     page.setDefaultTimeout(NAVIGATION_TIMEOUT_MS)
     page.setDefaultNavigationTimeout(NAVIGATION_TIMEOUT_MS)
 
-    // Step 1: Login
-    await login(page, env.NEXTIVA_USERNAME, env.NEXTIVA_PASSWORD)
+    // Step 1: Login — returns the tenant-specific base URL
+    // (e.g. https://heatoneye.nextos.com)
+    const tenantBaseUrl = await login(page, env.NEXTIVA_USERNAME, env.NEXTIVA_PASSWORD)
 
     // Screenshot the dashboard for debugging
     await takeScreenshot(page, 'post-login-dashboard')
     log(`Current URL after login: ${page.url()}`)
 
     // Step 2: Navigate to Users page
-    await navigateToUsersPage(page)
+    await navigateToUsersPage(page, tenantBaseUrl)
 
     // Step 3: Export CSV
     const csvContent = await exportUsersCSV(page)
