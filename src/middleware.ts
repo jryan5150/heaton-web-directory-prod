@@ -137,7 +137,7 @@ function isExemptFromIPCheck(pathname: string): boolean {
   // Admin API routes — protected by their own auth
   if (pathname.startsWith('/api/admin')) return true
 
-  // NextAuth API routes — handles Microsoft SSO OIDC flow
+  // NextAuth routes — handles Microsoft SSO OIDC flow
   if (pathname.startsWith('/api/auth')) return true
 
   // Internal API routes — protected by internal secret

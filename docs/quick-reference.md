@@ -1,54 +1,82 @@
-# Heaton Eye Admin Portal - Quick Reference Guide
+# Heaton Eye Admin Portal — Quick Reference
 
-**Version 2.0** | **Portal URL:** https://staff.heatoneye.com/admin
+**Version 3.0** | **Portal URL:** https://staff.heatoneye.com/admin
 
 ---
 
 ## Signing In
 
-**Microsoft Sign-In (Recommended):** Click "Sign in with Microsoft" and use your @heatoneye.com account.
+Go to https://staff.heatoneye.com/admin/login and enter your email and password.
 
-**Email & Password (Fallback):** Enter your email and password in the form below the Microsoft button.
-
----
-
-## User Roles
-
-### Super Admin (Full Access)
-- Publish changes, manage users, manage IP allow list, manage sync mappings
-
-### Approver (Review & Approve)
-- Can approve or reject pending changes
-- Cannot publish, manage users, or manage IPs
-
-### Editor (Submit Changes)
-- Can submit new employees, edits, and deletions
-- All submissions require approval
+Sessions stay active for 7 days. Contact your Super Admin if you need credentials or a password reset.
 
 ---
 
-## Role Permissions Matrix
+## Role Permissions
 
-| Action                    | Super Admin | Approver | Editor |
-|---------------------------|:-----------:|:--------:|:------:|
-| View Employees            |      ✅     |    ✅    |   ✅   |
-| Submit Changes            |      ✅     |    ✅    |   ✅   |
-| Approve/Reject Changes    |      ✅     |    ✅    |   ❌   |
-| Upload Nextiva CSV        |      ✅     |    ✅    |   ✅   |
-| Publish Changes           |      ✅     |    ❌    |   ❌   |
-| Manage IP Allow List      |      ✅     |    ❌    |   ❌   |
-| Manage Sync Mappings      |      ✅     |    ❌    |   ❌   |
-| Rollback Versions         |      ✅     |    ❌    |   ❌   |
-| Manage Users              |      ✅     |    ❌    |   ❌   |
+| Action                  | Super Admin | Approver | Editor |
+|-------------------------|:-----------:|:--------:|:------:|
+| View Employees          |     Yes     |   Yes    |  Yes   |
+| Submit Changes          |     Yes     |   Yes    |  Yes   |
+| Approve / Reject        |     Yes     |   Yes    |  No    |
+| Upload Nextiva CSV      |     Yes     |   Yes    |  Yes   |
+| Publish Changes         |     Yes     |   No     |  No    |
+| Rollback Versions       |     Yes     |   No     |  No    |
+| Manage IP Allow List    |     Yes     |   No     |  No    |
+| Manage Sync Mappings    |     Yes     |   No     |  No    |
+| Manage Users            |     Yes     |   No     |  No    |
 
 ---
 
 ## Approval Workflow
 
-1. **EDITOR** submits change → Status: Pending Review
-2. **APPROVER** reviews → Approves or Rejects
-3. If approved → Status: Ready to Publish
-4. **SUPER ADMIN** publishes → Live on staff.heatoneye.com
+```
+1. EDITOR submits change       → Status: Pending Review
+2. APPROVER reviews            → Approves or Rejects
+3. Approved                    → Status: Ready to Publish
+4. SUPER ADMIN publishes       → Live on staff.heatoneye.com
+```
+
+---
+
+## Common Tasks
+
+### Editor — Submit a Change
+
+| Task           | Steps                                              |
+|----------------|----------------------------------------------------|
+| Add employee   | Employees → Add New Employee → Fill form → Submit  |
+| Edit employee  | Employees → Find employee → Edit → Submit          |
+| Delete employee| Employees → Find employee → Delete → Confirm       |
+
+### Approver — Review Changes
+
+| Task          | Steps                                                   |
+|---------------|---------------------------------------------------------|
+| Approve one   | Pending Changes → Review → Approve                      |
+| Reject one    | Pending Changes → Review → Reject                       |
+| Bulk approve  | Pending Changes → Check boxes → Approve Selected        |
+
+### Super Admin — Publish
+
+| Task                | Steps                                                    |
+|---------------------|----------------------------------------------------------|
+| Publish changes     | Pending Changes → Publish X Approved Changes             |
+| Roll back version   | Version History → Find version → Rollback                |
+| Add IP address      | IP Allow List → Add IP → Enter address and location      |
+| Remove IP address   | IP Allow List → Trash icon → Confirm                     |
+| Add user            | Users → Add User → Fill form → Save                      |
+| Add sync mapping    | Nextiva Sync → Manual Email Mappings → Add Mapping       |
+
+---
+
+## Change Type Badges
+
+| Badge  | Meaning                               |
+|--------|---------------------------------------|
+| ADD    | New employee being added              |
+| EDIT   | Existing employee info being updated  |
+| DELETE | Employee being removed                |
 
 ---
 
@@ -60,103 +88,59 @@ The sync engine automatically:
 - Matches employees by email, manual mapping, or name
 - Updates extensions, phone numbers, and locations
 - Filters out rooms, devices, and fax lines
-- Queues unmatched people for review in Pending Changes
+- Queues unmatched people as pending changes for review
 
 **Automated:** A daily sync runs on weekday mornings automatically.
 
-**Manual Mappings (Super Admin):** When emails don't match, add a manual mapping:
-Nextiva Sync tab → Manual Email Mappings → Add Mapping
+**Manual mappings (Super Admin):** When emails don't match across systems, add a manual mapping:
+Nextiva Sync → Manual Email Mappings → Add Mapping
 
 ---
 
-## IP Allow List (Super Admin)
+## Quick Troubleshooting
 
-The public directory is restricted to office networks. Manage allowed IPs:
-
-**View:** IP Allow List tab → IPs grouped by location
-
-**Add:** IP Allow List tab → Add IP → Enter address and location
-
-**Remove:** Click red trash icon → Confirm removal
-
----
-
-## Common Tasks
-
-### For Editors
-
-**Submit New Employee**
-Employees Tab → Add New Employee → Fill Form → Submit
-
-**Edit Employee**
-Employees Tab → Find Employee → Edit → Submit
-
-### For Approvers
-
-**Approve/Reject Change**
-Pending Changes Tab → Review → Click Approve or Reject
-
-**Bulk Approve**
-Pending Changes → Check boxes → Approve Selected
+| Problem                              | Fix                                                                  |
+|--------------------------------------|----------------------------------------------------------------------|
+| Cannot log in                        | Verify email and password. Contact Super Admin for a reset.          |
+| Directory shows "Access Restricted"  | Must be on an approved office network. Admin portal works anywhere.  |
+| No Approve / Reject buttons          | Editors cannot approve. Contact Super Admin to check your role.      |
+| No Publish button                    | Publish is Super Admin only.                                         |
+| No IP Allow List or Users tabs       | Super Admin only. Expected behavior.                                 |
+| Changes not on live site             | Must be published, not just approved. Hard refresh: Ctrl+Shift+R     |
+| Nextiva sync has unmatched records   | Check Pending Changes tab. Super Admin can add manual email mapping.  |
 
 ---
 
-## Change Types
+## Office IP Addresses
 
-| Badge | Type | Description |
-|-------|------|-------------|
-| ADD | New employee being added to directory |
-| EDIT | Existing employee information being updated |
-| DELETE | Employee being removed from directory |
-
----
-
-## Troubleshooting Quick Fixes
-
-### Microsoft sign-in says "Access denied"?
-→ Your account must be pre-registered by a Super Admin
-
-### Can't log in with email/password?
-→ Verify credentials. If SSO-only, use Microsoft button
-
-### Directory shows "Access Restricted"?
-→ You must be on an approved office network
-→ Admin portal works from anywhere: staff.heatoneye.com/admin
-
-### Nextiva sync has unmatched records?
-→ Check Pending Changes tab for queued reviews
-→ Super Admin can add manual email mappings
-
-### Changes not on live site?
-→ Must be published, not just approved
-→ Hard refresh browser: Ctrl+F5
+| Location        | IPs                                  |
+|-----------------|--------------------------------------|
+| Athens          | 4.36.173.10, 66.76.57.122            |
+| Tyler           | 12.156.3.90, 75.110.177.134          |
+| Gun Barrel City | 209.245.234.34, 209.33.56.59         |
+| Longview        | 12.164.166.172, 206.255.14.253       |
 
 ---
 
 ## Important URLs
 
-| Purpose | URL |
-|---------|-----|
-| Admin Portal | https://staff.heatoneye.com/admin |
-| Login Page | https://staff.heatoneye.com/admin/login |
-| Public Directory | https://staff.heatoneye.com |
+| Purpose          | URL                                      |
+|------------------|------------------------------------------|
+| Public Directory | https://staff.heatoneye.com              |
+| Admin Portal     | https://staff.heatoneye.com/admin        |
+| Login Page       | https://staff.heatoneye.com/admin/login  |
 
 ---
 
 ## Security Reminders
 
-- Use Microsoft sign-in when possible (more secure)
-- Log out when finished
-- Don't share credentials
+- Log out when finished, especially on shared devices
+- Do not share your credentials with anyone
 - Sessions expire after 7 days
-- Double-check data before submitting
+- Double-check all data before submitting
 
 ---
 
 ## Support
 
 **Email:** tickets@heatoneye.com
-
----
-
-**Quick Reference Guide v2.0**

@@ -5,13 +5,12 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import Link from 'next/link'
 
-/** Map next-auth/callback error codes to user-friendly messages */
 function getErrorMessage(code: string | null): string {
   switch (code) {
     case 'AccessDenied':
-      return 'Access denied. Your Microsoft account is not registered as an admin.'
+      return 'Access denied. Your account is not registered as an admin.'
     case 'NoSession':
-      return 'Microsoft sign-in session expired. Please try again.'
+      return 'Sign-in session expired. Please try again.'
     case 'NotRegistered':
       return 'Your account is not registered as an admin. Contact your administrator.'
     case 'CallbackError':
@@ -24,10 +23,6 @@ function getErrorMessage(code: string | null): string {
   }
 }
 
-/**
- * Wrapper component to provide Suspense boundary for useSearchParams.
- * Next.js 15 requires this for client components that read search params.
- */
 export default function AdminLoginPage() {
   return (
     <Suspense fallback={
@@ -59,7 +54,7 @@ function LoginContent() {
     setError('')
     setMsLoading(true)
     try {
-      await signIn('azure-ad', {
+      await signIn('microsoft-entra-id', {
         callbackUrl: '/api/admin/microsoft-callback',
       })
     } catch {
@@ -179,7 +174,7 @@ function LoginContent() {
             </div>
           )}
 
-          {/* Microsoft SSO Button (Primary) */}
+          {/* Microsoft SSO — Primary */}
           <button
             type="button"
             onClick={handleMicrosoftSignIn}
@@ -214,7 +209,6 @@ function LoginContent() {
               }
             }}
           >
-            {/* Microsoft Logo SVG (official 4-square logo) */}
             <svg width="20" height="20" viewBox="0 0 21 21" fill="none">
               <rect x="1" y="1" width="9" height="9" fill="#F25022" />
               <rect x="11" y="1" width="9" height="9" fill="#7FBA00" />
@@ -238,7 +232,7 @@ function LoginContent() {
             <div style={{ flex: 1, height: '1px', background: 'var(--gray-200)' }} />
           </div>
 
-          {/* Email/Password Form (Fallback) */}
+          {/* Email / Password — Fallback */}
           <form onSubmit={handleSubmit}>
             <div style={{ marginBottom: '16px' }}>
               <label style={{

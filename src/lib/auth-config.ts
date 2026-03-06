@@ -1,71 +1,42 @@
 import NextAuth from 'next-auth'
-import AzureAD from 'next-auth/providers/azure-ad'
-import prisma from '@/lib/db'
+import MicrosoftEntraID from 'next-auth/providers/microsoft-entra-id'
 
 /**
- * NextAuth configuration for Microsoft Entra ID (Azure AD) SSO.
- *
- * We use next-auth ONLY for the Microsoft OIDC flow. Once authenticated,
- * we create our own JWT session (via auth-helpers.ts) in the microsoft-callback
- * route. This avoids rearchitecting the existing email/password auth system.
+ * NextAuth is used only for the Microsoft OIDC flow.
+ * Once authenticated, the microsoft-callback route reads the next-auth session,
+ * looks up the user in our database, and mints a custom admin-session JWT cookie.
+ * All subsequent auth checks use our own session — not next-auth.
  */
-export const { handlers, auth, signIn: serverSignIn } = NextAuth({
+export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
-    AzureAD({
+    MicrosoftEntraID({
       clientId: process.env.AZURE_AD_CLIENT_ID!,
       clientSecret: process.env.AZURE_AD_CLIENT_SECRET!,
-      // Restrict to organization's tenant only (not personal Microsoft accounts)
       issuer: `https://login.microsoftonline.com/${process.env.AZURE_AD_TENANT_ID}/v2.0`,
     }),
   ],
   // next-auth needs its own secret for internal JWT signing
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
-    async signIn({ user, profile }) {
-      // Only allow users who are pre-registered in our User table
-      const email = user.email || profile?.email
-      if (!email) return false
-
-      const dbUser = await prisma.user.findFirst({
-        where: {
-          email: {
-            equals: email,
-            mode: 'insensitive',
-          },
-        },
-      })
-
-      if (!dbUser) {
-        // Not a registered admin -- deny sign-in
-        return false
-      }
-
-      return true
-    },
     async jwt({ token, profile }) {
-      // Pass Microsoft profile info through the next-auth JWT so we can
-      // read it in the microsoft-callback route via auth()
+      // Pass Microsoft profile info through the next-auth JWT so the
+      // microsoft-callback route can read the email and Entra Object ID
       if (profile) {
-        token.microsoftId = profile.oid || profile.sub
-        token.email = profile.email || profile.preferred_username
-        token.name = profile.name
+        token.microsoftId = (profile as Record<string, unknown>).oid as string | undefined
+        if (profile.email) token.email = profile.email
+        if (profile.name) token.name = profile.name
       }
       return token
     },
     async session({ session, token }) {
-      // Attach Microsoft profile data to the session object
-      if (token) {
-        session.microsoftId = token.microsoftId as string
-        session.user.email = token.email as string
-        session.user.name = token.name as string
+      if (token.microsoftId) {
+        (session.user as unknown as Record<string, unknown>).microsoftId = token.microsoftId
       }
       return session
     },
   },
   pages: {
-    // Use our existing login page
     signIn: '/admin/login',
-    // On error, redirect back to login with error param
     error: '/admin/login',
   },
 })

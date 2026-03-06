@@ -5,61 +5,64 @@ import { setSessionCookie } from '@/lib/auth-helpers'
 import { UserRole } from '@/types/admin'
 
 /**
- * After Microsoft SSO completes, next-auth redirects here.
- * This route reads the next-auth session to get the Microsoft user info,
- * looks up the user in our DB, creates our own JWT session cookie
- * (same as email/password login), and redirects to /admin.
+ * After Microsoft OIDC completes, next-auth redirects here.
+ * This route reads the next-auth session to get the Microsoft user's email
+ * and Entra Object ID, looks up the corresponding admin user in the database,
+ * and mints our own admin-session JWT cookie.
+ *
+ * Only users pre-registered in the database are granted access.
  */
 export async function GET(request: NextRequest) {
   try {
-    // Get the next-auth session (contains Microsoft profile data)
     const session = await auth()
 
     if (!session?.user?.email) {
-      const loginUrl = new URL('/admin/login', request.url)
-      loginUrl.searchParams.set('error', 'NoSession')
-      return NextResponse.redirect(loginUrl)
+      return NextResponse.redirect(
+        new URL('/admin/login?error=NoSession', request.url)
+      )
     }
 
-    // Look up the user in our User table by email (case-insensitive)
-    const dbUser = await prisma.user.findFirst({
+    const microsoftEmail = session.user.email
+    const microsoftId = (session.user as Record<string, unknown>).microsoftId as string | undefined
+
+    // Look up user by email or by linked Microsoft ID
+    const user = await prisma.user.findFirst({
       where: {
-        email: {
-          equals: session.user.email,
-          mode: 'insensitive',
-        },
+        OR: [
+          { email: { equals: microsoftEmail, mode: 'insensitive' } },
+          ...(microsoftId ? [{ microsoftId }] : []),
+        ],
       },
     })
 
-    if (!dbUser) {
-      const loginUrl = new URL('/admin/login', request.url)
-      loginUrl.searchParams.set('error', 'NotRegistered')
-      return NextResponse.redirect(loginUrl)
+    if (!user) {
+      return NextResponse.redirect(
+        new URL('/admin/login?error=NotRegistered', request.url)
+      )
     }
 
-    // Update microsoftId if not already set
-    const microsoftId = session.microsoftId
-    if (microsoftId && !dbUser.microsoftId) {
+    // Link the Entra Object ID if not already stored — enables future lookups
+    // even if the user's email changes in Microsoft 365
+    if (microsoftId && !user.microsoftId) {
       await prisma.user.update({
-        where: { id: dbUser.id },
+        where: { id: user.id },
         data: { microsoftId },
       })
     }
 
-    // Create our JWT session cookie (same as email/password login)
+    // Mint our own admin session cookie
     await setSessionCookie({
-      id: dbUser.id,
-      email: dbUser.email,
-      name: dbUser.name,
-      role: dbUser.role as UserRole,
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role as UserRole,
     })
 
-    // Redirect to admin dashboard
     return NextResponse.redirect(new URL('/admin', request.url))
   } catch (error) {
     console.error('Microsoft callback error:', error)
-    const loginUrl = new URL('/admin/login', request.url)
-    loginUrl.searchParams.set('error', 'CallbackError')
-    return NextResponse.redirect(loginUrl)
+    return NextResponse.redirect(
+      new URL('/admin/login?error=CallbackError', request.url)
+    )
   }
 }
