@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromCookie, canPublish } from '@/lib/auth-helpers'
 import prisma from '@/lib/db'
 import { Employee } from '@/types/employee'
+import { employeeSnapshotSelect, toEmployeeData } from '@/lib/employee-data'
 
 // POST - Rollback to a specific version
 export async function POST(request: NextRequest) {
   try {
-    // Check authentication and authorization
     const user = await getSessionFromCookie()
 
     if (!user) {
@@ -23,8 +23,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Version ID required' }, { status: 400 })
     }
 
-    // Find the version in database
-    const version = await prisma.version.findFirst({
+    const version = await prisma.version.findUnique({
       where: { versionId }
     })
 
@@ -32,67 +31,36 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Version not found' }, { status: 404 })
     }
 
-    // Get current employees for backup
-    const currentEmployees = await prisma.employee.findMany()
-    const currentSnapshot = currentEmployees.map(emp => ({
-      id: emp.id,
-      firstName: emp.firstName,
-      lastName: emp.lastName,
-      email: emp.email,
-      extension: emp.extension,
-      phoneNumber: emp.phoneNumber,
-      did: emp.did,
-      location: emp.location,
-      team: emp.team,
-      title: emp.title,
-      jobTitle: emp.jobTitle,
-      department: emp.department,
-      photoUrl: emp.photoUrl,
-      avatarUrl: emp.avatarUrl,
-    }))
-
-    // Create a backup version before rollback
-    const backupId = `rollback-backup-${Date.now()}`
-    await prisma.version.create({
-      data: {
-        versionId: backupId,
-        timestamp: new Date(),
-        author,
-        changeCount: 0,
-        snapshot: currentSnapshot,
-        description: `Backup before rollback to ${versionId}`
-      }
-    })
-
-    // Get employees from the version snapshot
     const snapshotEmployees = version.snapshot as unknown as Employee[]
+    const backupId = `rollback-backup-${Date.now()}`
 
-    // Replace all employees with snapshot data and clear stale approved changes
-    await prisma.$transaction([
-      prisma.employee.deleteMany(),
-      ...snapshotEmployees.map(emp => prisma.employee.create({
+    await prisma.$transaction(async (tx) => {
+      // Backup current state before rollback
+      const currentSnapshot = await tx.employee.findMany({ select: employeeSnapshotSelect })
+
+      await tx.version.create({
         data: {
-          id: emp.id,
-          firstName: emp.firstName,
-          lastName: emp.lastName,
-          email: emp.email || null,
-          extension: emp.extension || null,
-          phoneNumber: emp.phoneNumber || null,
-          did: emp.did || null,
-          location: emp.location,
-          team: emp.team || '',
-          title: emp.title || null,
-          jobTitle: emp.jobTitle || null,
-          department: emp.department || null,
-          photoUrl: emp.photoUrl || null,
-          avatarUrl: emp.avatarUrl || null,
+          versionId: backupId,
+          timestamp: new Date(),
+          author,
+          changeCount: 0,
+          snapshot: currentSnapshot,
+          description: `Backup before rollback to ${versionId}`
         }
-      })),
-      // Clear approved changes that would re-apply the rolled-back state
-      prisma.pendingChange.deleteMany({
-        where: { status: 'approved' }
       })
-    ])
+
+      // Replace all employees with snapshot
+      await tx.employee.deleteMany()
+      await tx.employee.createMany({
+        data: snapshotEmployees.map(emp => ({
+          id: emp.id,
+          ...toEmployeeData(emp),
+        }))
+      })
+
+      // Clear approved changes that would conflict with rolled-back state
+      await tx.pendingChange.deleteMany({ where: { status: 'approved' } })
+    }, { timeout: 30000 })
 
     return NextResponse.json({
       success: true,

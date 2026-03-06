@@ -7,8 +7,10 @@ import { ArrowPathIcon, ClockIcon, DocumentTextIcon } from '@heroicons/react/24/
 interface Version {
   id: string
   timestamp: string
+  author: string
+  changeCount: number
   employeeCount: number
-  changes: string[]
+  description: string | null
 }
 
 interface ActivityLogEntry {
@@ -210,30 +212,19 @@ export default function VersionHistoryPanel({ onDataChange, userRole }: VersionH
                     marginBottom: '12px'
                   }}>
                     <div style={{ fontSize: '13px', color: 'var(--secondary-text-color)', marginBottom: '4px' }}>
-                      Employee Count: <strong style={{ color: 'var(--primary-text-color)' }}>{version.employeeCount}</strong>
+                      Employees at snapshot: <strong style={{ color: 'var(--primary-text-color)' }}>{version.employeeCount}</strong>
                     </div>
-                    {version.changes && version.changes.length > 0 && (
-                      <div style={{ marginTop: '8px' }}>
-                        <div style={{ fontSize: '12px', fontWeight: '600', marginBottom: '4px', color: 'var(--secondary-text-color)' }}>
-                          Changes:
-                        </div>
-                        <ul style={{
-                          margin: 0,
-                          paddingLeft: '20px',
-                          fontSize: '12px',
-                          color: 'var(--primary-text-color)'
-                        }}>
-                          {version.changes.slice(0, 5).map((change, idx) => (
-                            <li key={idx}>{change}</li>
-                          ))}
-                          {version.changes.length > 5 && (
-                            <li style={{ color: 'var(--secondary-text-color)', fontStyle: 'italic' }}>
-                              +{version.changes.length - 5} more changes
-                            </li>
-                          )}
-                        </ul>
+                    <div style={{ fontSize: '13px', color: 'var(--secondary-text-color)', marginBottom: '4px' }}>
+                      Changes published: <strong style={{ color: 'var(--primary-text-color)' }}>{version.changeCount}</strong>
+                    </div>
+                    {version.description && (
+                      <div style={{ fontSize: '12px', color: 'var(--secondary-text-color)', marginTop: '4px' }}>
+                        {version.description}
                       </div>
                     )}
+                    <div style={{ fontSize: '12px', color: 'var(--secondary-text-color)', marginTop: '4px' }}>
+                      By {version.author}
+                    </div>
                   </div>
                 </div>
               ))}

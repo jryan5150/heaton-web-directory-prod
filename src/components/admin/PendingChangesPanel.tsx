@@ -87,7 +87,8 @@ export default function PendingChangesPanel({ pendingChanges, onDataChange, user
       const result = await response.json()
 
       if (result.success) {
-        alert(`Successfully published ${result.publishedCount} changes!\nVersion: ${result.versionId}\nTotal employees: ${result.totalEmployees}`)
+        const skippedMsg = result.skippedCount > 0 ? `\nSkipped: ${result.skippedCount} (stale references)` : ''
+        alert(`Successfully published ${result.publishedCount} changes!\nVersion: ${result.versionId}\nTotal employees: ${result.totalEmployees}${skippedMsg}`)
         onDataChange()
       } else {
         alert(result.error || 'Failed to publish changes')

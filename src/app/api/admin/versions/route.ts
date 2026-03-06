@@ -10,25 +10,28 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const versions = await prisma.version.findMany({
-      orderBy: { timestamp: 'desc' },
-      select: {
-        versionId: true,
-        timestamp: true,
-        author: true,
-        changeCount: true,
-        description: true,
-        // Don't include snapshot to reduce payload
-      }
-    })
+    // Use raw query to get snapshot array length without fetching full snapshot data
+    const versions = await prisma.$queryRaw<Array<{
+      versionId: string
+      timestamp: Date
+      author: string
+      changeCount: number
+      description: string | null
+      employeeCount: number
+    }>>`
+      SELECT "versionId", timestamp, author, "changeCount", description,
+             jsonb_array_length(snapshot::jsonb) as "employeeCount"
+      FROM "Version"
+      ORDER BY timestamp DESC
+    `
 
-    // Map to expected format
     const mappedVersions = versions.map(v => ({
       id: v.versionId,
-      timestamp: v.timestamp.toISOString(),
+      timestamp: v.timestamp instanceof Date ? v.timestamp.toISOString() : v.timestamp,
       author: v.author,
-      changeCount: v.changeCount,
-      description: v.description
+      changeCount: Number(v.changeCount),
+      employeeCount: Number(v.employeeCount),
+      description: v.description,
     }))
 
     return NextResponse.json(mappedVersions)
